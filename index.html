@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbitOS — Web Desktop</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2300d4ff'/><circle cx='50' cy='50' r='25' fill='%230a0a1a'/><circle cx='50' cy='50' r='10' fill='%2300d4ff'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Boot Screen -->
+  <div id="boot-screen">
+    <div class="boot-logo">
+      <div class="orbit-ring"></div>
+      <div class="orbit-core"></div>
+    </div>
+    <h1 class="boot-title">OrbitOS</h1>
+    <p class="boot-subtitle">Initializing desktop environment...</p>
+    <div class="boot-progress">
+      <div class="boot-bar" id="boot-bar"></div>
+    </div>
+    <p class="boot-status" id="boot-status">Loading core modules...</p>
+  </div>
+
+  <!-- Desktop -->
+  <div id="desktop" class="hidden">
+    <div id="wallpaper"></div>
+    
+    <!-- Desktop Icons -->
+    <div id="desktop-icons">
+      <div class="desktop-icon" data-app="browser" title="Proxy Browser">
+        <div class="icon-img browser-icon">🌐</div>
+        <span>Browser</span>
+      </div>
+      <div class="desktop-icon" data-app="music" title="Music Player">
+        <div class="icon-img music-icon">🎵</div>
+        <span>Music</span>
+      </div>
+      <div class="desktop-icon" data-app="games" title="Games Arcade">
+        <div class="icon-img games-icon">🎮</div>
+        <span>Games</span>
+      </div>
+      <div class="desktop-icon" data-app="terminal" title="Terminal">
+        <div class="icon-img terminal-icon">💻</div>
+        <span>Terminal</span>
+      </div>
+      <div class="desktop-icon" data-app="notepad" title="Notepad">
+        <div class="icon-img notepad-icon">📝</div>
+        <span>Notepad</span>
+      </div>
+      <div class="desktop-icon" data-app="calculator" title="Calculator">
+        <div class="icon-img calc-icon">🧮</div>
+        <span>Calculator</span>
+      </div>
+      <div class="desktop-icon" data-app="paint" title="Paint">
+        <div class="icon-img paint-icon">🎨</div>
+        <span>Paint</span>
+      </div>
+      <div class="desktop-icon" data-app="files" title="File Explorer">
+        <div class="icon-img files-icon">📁</div>
+        <span>Files</span>
+      </div>
+      <div class="desktop-icon" data-app="settings" title="Settings">
+        <div class="icon-img settings-icon">⚙️</div>
+        <span>Settings</span>
+      </div>
+      <div class="desktop-icon" data-app="about" title="About OrbitOS">
+        <div class="icon-img about-icon">ℹ️</div>
+        <span>About</span>
+      </div>
+    </div>
+
+    <!-- Windows Container -->
+    <div id="windows-container"></div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="hidden">
+      <div class="start-header">
+        <div class="user-avatar">🚀</div>
+        <div class="user-info">
+          <strong>Orbit User</strong>
+          <span>GitHub Pages Edition</span>
+        </div>
+      </div>
+      <div class="start-apps">
+        <div class="start-app" data-app="browser"><span>🌐</span> Proxy Browser</div>
+        <div class="start-app" data-app="music"><span>🎵</span> Music Player</div>
+        <div class="start-app" data-app="games"><span>🎮</span> Games Arcade</div>
+        <div class="start-app" data-app="terminal"><span>💻</span> Terminal</div>
+        <div class="start-app" data-app="notepad"><span>📝</span> Notepad</div>
+        <div class="start-app" data-app="calculator"><span>🧮</span> Calculator</div>
+        <div class="start-app" data-app="paint"><span>🎨</span> Paint</div>
+        <div class="start-app" data-app="files"><span>📁</span> File Explorer</div>
+        <div class="start-app" data-app="settings"><span>⚙️</span> Settings</div>
+        <div class="start-app" data-app="about"><span>ℹ️</span> About OrbitOS</div>
+      </div>
+      <div class="start-footer">
+        <button id="power-btn" title="Restart">⏻ Restart</button>
+      </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div id="taskbar">
+      <button id="start-btn" title="Start">
+        <span class="start-logo">◉</span>
+      </button>
+      <div id="taskbar-apps"></div>
+      <div id="taskbar-right">
+        <div id="system-tray">
+          <span id="volume-icon" title="Volume">🔊</span>
+          <span id="wifi-icon" title="Connected">📶</span>
+        </div>
+        <div id="clock" title="Click for calendar"></div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="hidden">
+      <div class="ctx-item" data-action="refresh">🔄 Refresh Desktop</div>
+      <div class="ctx-item" data-action="wallpaper">🖼️ Change Wallpaper</div>
+      <div class="ctx-item" data-action="about">ℹ️ About OrbitOS</div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
