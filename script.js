@@ -172,7 +172,7 @@
           setInterval(saveSession, 5000);
           if (store.reduceMotion) document.body.classList.add('reduce-motion');
           setTimeout(restoreFloatStickies, 400);
-          setTimeout(setupIconDrag, 500);
+          /* icon drag disabled */
         }, 350);
       }
     }, 160);
@@ -904,7 +904,7 @@
           '<div class="settings-row vol-row"><span>Volume</span><input type="range" id="settings-vol" min="0" max="100" value="70"></div></div>' +
           '<div class="settings-section"><h3>Accessibility</h3><div class="settings-row"><span>Reduced motion</span><button type="button" id="settings-motion">Toggle</button></div></div>' +
           '<div class="settings-section"><h3>Desktop</h3><div class="settings-row"><span>Floating sticky</span><button type="button" id="settings-sticky">Add sticky</button></div></div>' +
-          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.4.0</span></div>' +
+          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.4.1</span></div>' +
           '<div class="settings-row"><span>Restore session on boot</span><span style="color:var(--text-dim)">On</span></div>' +
           '<div class="settings-row"><span>Clear local data</span><button type="button" id="settings-clear">Clear</button></div></div></div>';
       },
@@ -1068,43 +1068,6 @@
       init: function () {}
     },
 
-    movies: {
-      title: 'Movies', icon: '🎬', width: 780, height: 520,
-      content: function () {
-        return '<div class="movies-layout"><div class="movies-sidebar" id="movies-list"></div>' +
-          '<div class="movies-main"><div class="movies-player" id="movies-player">' +
-          '<div class="movies-placeholder"><span style="font-size:2rem">🎬</span><span>Select a trailer to play in-window</span></div></div>' +
-          '<div class="movies-meta" id="movies-meta"><h3>Orbit Cinema</h3><p>Official trailers via YouTube embed — plays inside this window</p></div></div></div>';
-      },
-      init: function (win) {
-        var catalog = [
-          { title: 'Big Buck Bunny', year: '2008', note: 'Open movie (Blender)', yt: 'aqz-KE-bpKQ' },
-          { title: 'Sintel', year: '2010', note: 'Open movie (Blender)', yt: 'eRsGyueVLvQ' },
-          { title: 'Tears of Steel', year: '2012', note: 'Open movie (Blender)', yt: 'R6MlUcmOul8' },
-          { title: 'Elephants Dream', year: '2006', note: 'Open movie (Blender)', yt: 'TLkA0RELQ1M' },
-          { title: 'Cosmos Laundromat', year: '2015', note: 'Open short (Blender)', yt: 'Y-rmzh0HIwo' },
-          { title: 'Spring', year: '2019', note: 'Open short (Blender)', yt: 'WhWc3b3KhnY' },
-          { title: 'Agent 327', year: '2017', note: 'Open short (Blender)', yt: 'mN0zPOpADL4' },
-          { title: 'Caminandes 3', year: '2016', note: 'Open short (Blender)', yt: 'SkVqJ1SGeL0' }
-        ];
-        var list = win.el.querySelector('#movies-list');
-        var player = win.el.querySelector('#movies-player');
-        var meta = win.el.querySelector('#movies-meta');
-        catalog.forEach(function (m, i) {
-          var div = document.createElement('div');
-          div.className = 'movies-item';
-          div.innerHTML = '<strong>' + m.title + '</strong><span>' + m.year + ' · ' + m.note + '</span>';
-          div.addEventListener('click', function () {
-            list.querySelectorAll('.movies-item').forEach(function (x) { x.classList.remove('active'); });
-            div.classList.add('active');
-            player.innerHTML = '<iframe src="https://www.youtube.com/embed/' + m.yt + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="' + m.title + '"></iframe>';
-            meta.innerHTML = '<h3>' + m.title + ' (' + m.year + ')</h3><p>' + m.note + ' — embedded player, no new tab</p>';
-            sfx('click');
-          });
-          list.appendChild(div);
-        });
-      }
-    },
     video: {
       title: 'Video Player', icon: '📽️', width: 640, height: 440,
       content: function () {
@@ -1138,7 +1101,7 @@
       },
       init: function (win) {
         var data = store.todo || {
-          todo: ['Try OrbitOS Movies', 'Write a sticky note'],
+          todo: ['Try Pong vs CPU', 'Write a sticky note'],
           doing: ['Polish the desktop'],
           done: ['Install nothing (browser only)']
         };
@@ -1242,11 +1205,11 @@
       title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 480,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.4.0 — Studio Pack</p>' +
+          '<p class="version">Version 1.4.1 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
           '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🌐 Browser</span><span>💻 Terminal</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.4.0</strong> — Movies, Video, To-Do, Markdown, Solitaire, desktop stickies, icon drag, volume, clipboard, reduced motion</li><li><strong>1.3.0</strong> — Themes, command palette, lock, session restore, desktop clock, Connect Four</li><li><strong>1.2.0</strong> — Stickies, Task Manager, Weather, Minesweeper, Pong, Run, search, screensaver</li><li><strong>1.1.0</strong> — Snap, shortcuts, calendar, mute, tips, paint tools, mobile, wallpapers</li>' +
+          '<li><strong>1.4.1</strong> — Removed Movies (embed errors); smarter Pong AI; icons locked; version sync</li><li><strong>1.4.0</strong> — Video, To-Do, Markdown, Solitaire, stickies, volume, clipboard, reduced motion</li><li><strong>1.3.0</strong> — Themes, command palette, lock, session restore, desktop clock, Connect Four</li><li><strong>1.2.0</strong> — Stickies, Task Manager, Weather, Minesweeper, Pong, Run, search, screensaver</li><li><strong>1.1.0</strong> — Snap, shortcuts, calendar, mute, tips, paint tools, mobile, wallpapers</li>' +
           '<li><strong>1.0.0</strong> — Initial desktop, apps, games</li></ul></div>' +
           '<p style="margin-top:16px;font-size:0.78rem;opacity:0.6">Made for GitHub Pages</p></div>';
       },
@@ -1586,9 +1549,29 @@
         if (ball.y < 7 || ball.y > 273) ball.vy *= -1;
         if (ball.x < 30 && ball.y > py && ball.y < py + 50) { ball.vx = Math.abs(ball.vx) * 1.05; ball.x = 30; }
         if (ball.x > 450 && ball.y > cy && ball.y < cy + 50) { ball.vx = -Math.abs(ball.vx) * 1.05; ball.x = 450; }
-        // AI
-        var target = ball.y - 25;
-        cy += Math.max(-3.2, Math.min(3.2, target - cy));
+        // AI — smart but imperfect (reaction lag, max speed, aim offset, rare mistakes)
+        if (typeof win._aiLag === 'undefined') win._aiLag = 0;
+        if (typeof win._aiOffset === 'undefined') win._aiOffset = 0;
+        if (typeof win._aiMiss === 'undefined') win._aiMiss = 0;
+        win._aiLag++;
+        // Only recalculate aim every few frames (reaction delay)
+        if (win._aiLag >= 4) {
+          win._aiLag = 0;
+          // Occasional aim offset so it doesn't lock perfectly on the ball
+          if (Math.random() < 0.08) win._aiOffset = (Math.random() - 0.5) * 36;
+          // Rare "mistake" — aim elsewhere briefly
+          if (Math.random() < 0.03) win._aiMiss = 12;
+        }
+        if (win._aiMiss > 0) {
+          win._aiMiss--;
+          var target = 140 + win._aiOffset; // drift toward center when missing
+        } else {
+          var target = ball.y - 25 + win._aiOffset;
+        }
+        // Only chase hard when ball is moving toward AI
+        var speed = ball.vx > 0 ? 4.2 : 2.4;
+        var diff = target - cy;
+        cy += Math.max(-speed, Math.min(speed, diff * 0.22));
         cy = Math.max(0, Math.min(230, cy));
         if (ball.x < 0) { cs++; resetBall(-1); }
         if (ball.x > 480) { ps++; resetBall(1); }
@@ -1640,7 +1623,7 @@
       terminal: 'terminal', shell: 'terminal', notepad: 'notepad', calc: 'calculator', calculator: 'calculator',
       paint: 'paint', files: 'files', explorer: 'files', settings: 'settings', about: 'about',
       stickies: 'stickies', sticky: 'stickies', notes: 'stickies', tasks: 'taskmgr', taskmgr: 'taskmgr',
-      task: 'taskmgr', weather: 'weather', movies: 'movies', video: 'video', todo: 'todo', markdown: 'markdown', snake: 'games', pong: 'games', mines: 'games', c4: 'games', connect: 'games'
+      task: 'taskmgr', weather: 'weather', video: 'video', todo: 'todo', markdown: 'markdown', snake: 'games', pong: 'games', mines: 'games', c4: 'games', connect: 'games'
     };
     if (map[cmd]) {
       openApp(map[cmd]);
@@ -1779,7 +1762,6 @@
     { id: 'stickies', icon: '📌', label: 'Sticky Notes', type: 'app' },
     { id: 'taskmgr', icon: '📊', label: 'Task Manager', type: 'app' },
     { id: 'weather', icon: '🌤️', label: 'Weather', type: 'app' },
-    { id: 'movies', icon: '🎬', label: 'Movies', type: 'app' },
     { id: 'video', icon: '📽️', label: 'Video Player', type: 'app' },
     { id: 'todo', icon: '📋', label: 'To-Do Board', type: 'app' },
     { id: 'markdown', icon: '📄', label: 'Markdown Editor', type: 'app' },
@@ -2106,49 +2088,8 @@
     (store.floatStickies || []).forEach(function (n) { addFloatSticky(n); });
   }
 
-  function setupIconDrag() {
-    var icons = document.getElementById('desktop-icons');
-    if (!icons) return;
-    var positions = store.iconPos || {};
-    Array.prototype.forEach.call(icons.querySelectorAll('.desktop-icon'), function (icon) {
-      var app = icon.dataset.app;
-      if (positions[app]) {
-        icon.style.position = 'absolute';
-        icon.style.left = positions[app].left + 'px';
-        icon.style.top = positions[app].top + 'px';
-        icon.style.margin = '0';
-      }
-      var dragging = false, ox = 0, oy = 0, moved = false;
-      icon.addEventListener('mousedown', function (e) {
-        if (e.button !== 0) return;
-        dragging = true; moved = false;
-        var rect = icon.getBoundingClientRect();
-        var parent = icons.getBoundingClientRect();
-        ox = e.clientX - rect.left; oy = e.clientY - rect.top;
-        icon.classList.add('dragging');
-        icon.style.position = 'absolute';
-        icon.style.margin = '0';
-      });
-      document.addEventListener('mousemove', function (e) {
-        if (!dragging) return;
-        moved = true;
-        var parent = icons.getBoundingClientRect();
-        var left = e.clientX - parent.left - ox;
-        var top = e.clientY - parent.top - oy;
-        icon.style.left = Math.max(0, left) + 'px';
-        icon.style.top = Math.max(0, top) + 'px';
-      });
-      document.addEventListener('mouseup', function () {
-        if (!dragging) return;
-        dragging = false;
-        icon.classList.remove('dragging');
-        if (moved) {
-          positions[app] = { left: parseInt(icon.style.left, 10) || 0, top: parseInt(icon.style.top, 10) || 0 };
-          saveStore({ iconPos: positions }); store = loadStore();
-        }
-      });
-    });
-    // prevent double-click open if we just dragged - handled by moved flag per icon is imperfect; ok
+    function setupIconDrag() {
+    /* Desktop icons are fixed — drag disabled */
   }
 
   function setupUI() {

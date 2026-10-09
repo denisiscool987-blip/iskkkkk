@@ -1126,3 +1126,12 @@ body {
   .movies-item { min-width: 120px; }
   .md-body { flex-direction: column; }
 }
+
+/* Locked desktop icons */
+#desktop-icons .desktop-icon {
+  cursor: pointer;
+  user-select: none;
+}
+#desktop-icons .desktop-icon.dragging {
+  opacity: 1;
+}

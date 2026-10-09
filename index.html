@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>OrbitOS — Web Desktop</title>
   <link rel="stylesheet" href="styles.css">
@@ -98,10 +99,6 @@
         <div class="icon-badge">📊</div>
         <span>Tasks</span>
       </div>
-      <div class="desktop-icon" data-app="movies" title="Movies">
-        <div class="icon-badge">🎬</div>
-        <span>Movies</span>
-      </div>
       <div class="desktop-icon" data-app="video" title="Video Player">
         <div class="icon-badge">📽️</div>
         <span>Video</span>
@@ -135,8 +132,8 @@
           <li><strong>Double-click</strong> desktop icons to open apps</li>
           <li><strong>Right-click</strong> the desktop to change wallpaper</li>
           <li>Start menu is the <strong>◉</strong> button on the taskbar</li>
-          <li><strong>Ctrl+K</strong> palette · <strong>Ctrl+Shift+V</strong> clipboard · drag icons to move</li>
-          <li>Movies play trailers in-app · To-Do board · Solitaire in Games</li>
+          <li><strong>Ctrl+K</strong> palette · <strong>Ctrl+Shift+V</strong> clipboard · icons stay fixed</li>
+          <li>To-Do board · Solitaire · Video player · Markdown editor</li>
         </ul>
         <button id="tips-dismiss" type="button">Got it</button>
       </div>
@@ -183,8 +180,7 @@
         <div class="start-app" data-app="files" data-name="files explorer"><span>📁</span> File Explorer</div>
         <div class="start-app" data-app="stickies" data-name="sticky notes"><span>📌</span> Sticky Notes</div>
         <div class="start-app" data-app="taskmgr" data-name="task manager processes"><span>📊</span> Task Manager</div>
-        <div class="start-app" data-app="movies" data-name="movies trailers cinema"><span>🎬</span> Movies</div>
-        <div class="start-app" data-app="video" data-name="video player local"><span>📽️</span> Video Player</div>
+<div class="start-app" data-app="video" data-name="video player local"><span>📽️</span> Video Player</div>
         <div class="start-app" data-app="todo" data-name="todo kanban board tasks"><span>📋</span> To-Do Board</div>
         <div class="start-app" data-app="markdown" data-name="markdown editor preview"><span>📄</span> Markdown</div>
         <div class="start-app" data-app="weather" data-name="weather"><span>🌤️</span> Weather</div>
