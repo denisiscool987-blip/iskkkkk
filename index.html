@@ -98,6 +98,22 @@
         <div class="icon-badge">📊</div>
         <span>Tasks</span>
       </div>
+      <div class="desktop-icon" data-app="movies" title="Movies">
+        <div class="icon-badge">🎬</div>
+        <span>Movies</span>
+      </div>
+      <div class="desktop-icon" data-app="video" title="Video Player">
+        <div class="icon-badge">📽️</div>
+        <span>Video</span>
+      </div>
+      <div class="desktop-icon" data-app="todo" title="Kanban Board">
+        <div class="icon-badge">📋</div>
+        <span>To-Do</span>
+      </div>
+      <div class="desktop-icon" data-app="markdown" title="Markdown">
+        <div class="icon-badge">📄</div>
+        <span>Markdown</span>
+      </div>
       <div class="desktop-icon" data-app="weather" title="Weather">
         <div class="icon-badge">🌤️</div>
         <span>Weather</span>
@@ -108,6 +124,7 @@
       </div>
     </div>
 
+    <div id="float-stickies"></div>
     <div id="windows-container"></div>
 
     <!-- First-run tips -->
@@ -118,8 +135,8 @@
           <li><strong>Double-click</strong> desktop icons to open apps</li>
           <li><strong>Right-click</strong> the desktop to change wallpaper</li>
           <li>Start menu is the <strong>◉</strong> button on the taskbar</li>
-          <li><strong>Ctrl+K</strong> command palette · <strong>Ctrl+R</strong> Run · <strong>F11</strong> fullscreen</li>
-          <li><strong>Ctrl+L</strong> lock · themes in Settings · session restores last apps</li>
+          <li><strong>Ctrl+K</strong> palette · <strong>Ctrl+Shift+V</strong> clipboard · drag icons to move</li>
+          <li>Movies play trailers in-app · To-Do board · Solitaire in Games</li>
         </ul>
         <button id="tips-dismiss" type="button">Got it</button>
       </div>
@@ -166,6 +183,10 @@
         <div class="start-app" data-app="files" data-name="files explorer"><span>📁</span> File Explorer</div>
         <div class="start-app" data-app="stickies" data-name="sticky notes"><span>📌</span> Sticky Notes</div>
         <div class="start-app" data-app="taskmgr" data-name="task manager processes"><span>📊</span> Task Manager</div>
+        <div class="start-app" data-app="movies" data-name="movies trailers cinema"><span>🎬</span> Movies</div>
+        <div class="start-app" data-app="video" data-name="video player local"><span>📽️</span> Video Player</div>
+        <div class="start-app" data-app="todo" data-name="todo kanban board tasks"><span>📋</span> To-Do Board</div>
+        <div class="start-app" data-app="markdown" data-name="markdown editor preview"><span>📄</span> Markdown</div>
         <div class="start-app" data-app="weather" data-name="weather"><span>🌤️</span> Weather</div>
         <div class="start-app" data-app="settings" data-name="settings"><span>⚙️</span> Settings</div>
         <div class="start-app" data-app="about" data-name="about"><span>ℹ️</span> About OrbitOS</div>
@@ -184,6 +205,7 @@
       <div id="taskbar-apps"></div>
       <div id="taskbar-right">
         <div id="system-tray">
+          <span id="clip-icon" title="Clipboard history" role="button" tabindex="0">📋</span>
           <span id="lock-icon" title="Lock (Ctrl+L)" role="button" tabindex="0">🔒</span>
           <span id="fs-icon" title="Fullscreen" role="button" tabindex="0">⛶</span>
           <span id="notif-icon" title="Notifications" role="button" tabindex="0">🔔</span>
@@ -251,6 +273,11 @@
         <p>Click or press any key to unlock</p>
         <button type="button" id="lock-unlock">Unlock</button>
       </div>
+    </div>
+
+    <div id="clip-panel" class="hidden">
+      <div class="clip-header"><strong>Clipboard</strong><button type="button" id="clip-clear">Clear</button></div>
+      <div id="clip-list"></div>
     </div>
 
     <div id="toast" class="hidden"></div>

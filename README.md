@@ -1,21 +1,23 @@
 # OrbitOS
 
-Browser desktop OS for GitHub Pages. **v1.3.0 Power Pack.**  
+Browser desktop OS for GitHub Pages. **v1.4.0 Studio Pack.**  
 No install · no backend · localStorage only.
 
-## Highlights
+## Apps
+Browser · Music · Games · Terminal · Notepad · Calculator · Paint · Files · Stickies · Task Manager · Weather · **Movies** · **Video** · **To-Do** · **Markdown** · Settings
 
-- Full window manager (snap, Alt+Tab, session restore)
-- Apps: Browser, Music, Games, Terminal, Notepad, Calc, Paint, Files, Stickies, Task Manager, Weather, Settings
-- Games: Snake, Tic-Tac-Toe, 2048, Memory, Minesweeper, Pong, **Connect Four**
-- **Ctrl+K** command palette · **Ctrl+R** Run · **Ctrl+L** lock · fullscreen
-- Themes, custom wallpaper URL, desktop clock, screensaver, notifications
-- Start menu search
+## Games
+Snake · Tic-Tac-Toe · 2048 · Memory · Minesweeper · Pong · Connect Four · **Solitaire**
+
+## System
+Ctrl+K palette · Ctrl+R Run · Ctrl+L lock · **Ctrl+Shift+V** clipboard  
+Themes · custom wallpaper · session restore · desktop clock · floating stickies · **drag icons** · volume · reduced motion · screensaver
+
+## Movies
+In-window YouTube embeds of **open/free** films (Blender open movies). No new tab. Local Video app plays your own files.
 
 ## Deploy
-
-Upload `index.html`, `styles.css`, `script.js` → GitHub Pages root.
+Upload `index.html`, `styles.css`, `script.js` to repo root → GitHub Pages.
 
 ## License
-
 MIT

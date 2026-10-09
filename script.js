@@ -170,6 +170,9 @@
           if (!store.tipsSeen) setTimeout(function () { document.getElementById('tips-overlay').classList.remove('hidden'); }, 500);
           setTimeout(restoreSession, 800);
           setInterval(saveSession, 5000);
+          if (store.reduceMotion) document.body.classList.add('reduce-motion');
+          setTimeout(restoreFloatStickies, 400);
+          setTimeout(setupIconDrag, 500);
         }, 350);
       }
     }, 160);
@@ -540,7 +543,8 @@
           '<div class="game-card" data-game="memory"><div class="game-emoji">🧠</div><h4>Memory</h4><p>Match pairs</p></div>' +
           '<div class="game-card" data-game="mines"><div class="game-emoji">💣</div><h4>Minesweeper</h4><p>Clear the field</p></div>' +
           '<div class="game-card" data-game="pong"><div class="game-emoji">🏓</div><h4>Pong</h4><p>Vs CPU</p></div>' +
-          '<div class="game-card" data-game="c4"><div class="game-emoji">🔴</div><h4>Connect Four</h4><p>2 players</p></div></div>';
+          '<div class="game-card" data-game="c4"><div class="game-emoji">🔴</div><h4>Connect Four</h4><p>2 players</p></div>' +
+          '<div class="game-card" data-game="solitaire"><div class="game-emoji">🃏</div><h4>Solitaire</h4><p>Klondike</p></div></div>';
       },
       init: function (win) {
         win.el.querySelectorAll('.game-card').forEach(function (card) {
@@ -550,6 +554,7 @@
             else if (g === '2048') open2048(); else if (g === 'memory') openMemory();
             else if (g === 'mines') openMines(); else if (g === 'pong') openPong();
             else if (g === 'c4') openConnectFour();
+            else if (g === 'solitaire') openSolitaire();
           });
         });
       }
@@ -895,8 +900,11 @@
           '<div class="wp-preset p2" data-wp="2"></div><div class="wp-preset p3" data-wp="3"></div><div class="wp-preset p4" data-wp="4"></div></div></div>' +
           '<div class="settings-row"><span>Custom URL</span><input id="wallpaper-url" placeholder="https://...image.jpg"></div>' +
           '<div class="settings-row"><span></span><button type="button" id="wallpaper-apply" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:rgba(0,212,255,0.15);color:var(--accent);cursor:pointer;font-size:0.8rem">Apply URL</button></div></div>' +
-          '<div class="settings-section"><h3>Sound</h3><div class="settings-row"><span>Mute UI & music</span><button type="button" id="settings-mute">Toggle Mute</button></div></div>' +
-          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.3.0</span></div>' +
+          '<div class="settings-section"><h3>Sound</h3><div class="settings-row"><span>Mute UI & music</span><button type="button" id="settings-mute">Toggle Mute</button></div>' +
+          '<div class="settings-row vol-row"><span>Volume</span><input type="range" id="settings-vol" min="0" max="100" value="70"></div></div>' +
+          '<div class="settings-section"><h3>Accessibility</h3><div class="settings-row"><span>Reduced motion</span><button type="button" id="settings-motion">Toggle</button></div></div>' +
+          '<div class="settings-section"><h3>Desktop</h3><div class="settings-row"><span>Floating sticky</span><button type="button" id="settings-sticky">Add sticky</button></div></div>' +
+          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.4.0</span></div>' +
           '<div class="settings-row"><span>Restore session on boot</span><span style="color:var(--text-dim)">On</span></div>' +
           '<div class="settings-row"><span>Clear local data</span><button type="button" id="settings-clear">Clear</button></div></div></div>';
       },
@@ -931,6 +939,23 @@
           applyWallpaper(); showToast('Custom wallpaper set'); sfx('success');
         });
         win.el.querySelector('#settings-mute').addEventListener('click', toggleMute);
+        var vol = win.el.querySelector('#settings-vol');
+        if (vol) {
+          vol.value = store.volume != null ? store.volume : 70;
+          vol.addEventListener('input', function () {
+            saveStore({ volume: +vol.value }); store = loadStore();
+            if (muted && +vol.value > 0) { muted = false; saveStore({ muted: false }); updateVolumeUI(); }
+          });
+        }
+        var motionBtn = win.el.querySelector('#settings-motion');
+        if (motionBtn) motionBtn.addEventListener('click', function () {
+          document.body.classList.toggle('reduce-motion');
+          var on = document.body.classList.contains('reduce-motion');
+          saveStore({ reduceMotion: on }); store = loadStore();
+          showToast(on ? 'Reduced motion on' : 'Reduced motion off');
+        });
+        var stickyBtn = win.el.querySelector('#settings-sticky');
+        if (stickyBtn) stickyBtn.addEventListener('click', function () { addFloatSticky(); sfx('open'); });
         win.el.querySelector('#settings-clear').addEventListener('click', function () {
           if (confirm('Clear all OrbitOS saved data?')) {
             localStorage.removeItem(STORE_KEY); localStorage.removeItem('orbitos-snake-best'); store = {}; showToast('Local data cleared');
@@ -1042,15 +1067,186 @@
       },
       init: function () {}
     },
+
+    movies: {
+      title: 'Movies', icon: '🎬', width: 780, height: 520,
+      content: function () {
+        return '<div class="movies-layout"><div class="movies-sidebar" id="movies-list"></div>' +
+          '<div class="movies-main"><div class="movies-player" id="movies-player">' +
+          '<div class="movies-placeholder"><span style="font-size:2rem">🎬</span><span>Select a trailer to play in-window</span></div></div>' +
+          '<div class="movies-meta" id="movies-meta"><h3>Orbit Cinema</h3><p>Official trailers via YouTube embed — plays inside this window</p></div></div></div>';
+      },
+      init: function (win) {
+        var catalog = [
+          { title: 'Big Buck Bunny', year: '2008', note: 'Open movie (Blender)', yt: 'aqz-KE-bpKQ' },
+          { title: 'Sintel', year: '2010', note: 'Open movie (Blender)', yt: 'eRsGyueVLvQ' },
+          { title: 'Tears of Steel', year: '2012', note: 'Open movie (Blender)', yt: 'R6MlUcmOul8' },
+          { title: 'Elephants Dream', year: '2006', note: 'Open movie (Blender)', yt: 'TLkA0RELQ1M' },
+          { title: 'Cosmos Laundromat', year: '2015', note: 'Open short (Blender)', yt: 'Y-rmzh0HIwo' },
+          { title: 'Spring', year: '2019', note: 'Open short (Blender)', yt: 'WhWc3b3KhnY' },
+          { title: 'Agent 327', year: '2017', note: 'Open short (Blender)', yt: 'mN0zPOpADL4' },
+          { title: 'Caminandes 3', year: '2016', note: 'Open short (Blender)', yt: 'SkVqJ1SGeL0' }
+        ];
+        var list = win.el.querySelector('#movies-list');
+        var player = win.el.querySelector('#movies-player');
+        var meta = win.el.querySelector('#movies-meta');
+        catalog.forEach(function (m, i) {
+          var div = document.createElement('div');
+          div.className = 'movies-item';
+          div.innerHTML = '<strong>' + m.title + '</strong><span>' + m.year + ' · ' + m.note + '</span>';
+          div.addEventListener('click', function () {
+            list.querySelectorAll('.movies-item').forEach(function (x) { x.classList.remove('active'); });
+            div.classList.add('active');
+            player.innerHTML = '<iframe src="https://www.youtube.com/embed/' + m.yt + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="' + m.title + '"></iframe>';
+            meta.innerHTML = '<h3>' + m.title + ' (' + m.year + ')</h3><p>' + m.note + ' — embedded player, no new tab</p>';
+            sfx('click');
+          });
+          list.appendChild(div);
+        });
+      }
+    },
+    video: {
+      title: 'Video Player', icon: '📽️', width: 640, height: 440,
+      content: function () {
+        return '<div class="video-body"><video id="local-video" controls playsinline></video>' +
+          '<div class="video-toolbar"><input type="file" id="video-file" accept="video/*">' +
+          '<button type="button" id="video-clear">Clear</button></div>' +
+          '<p style="font-size:0.75rem;color:var(--text-dim)">Plays files from your device only — never uploaded</p></div>';
+      },
+      init: function (win) {
+        var vid = win.el.querySelector('#local-video');
+        var input = win.el.querySelector('#video-file');
+        var url = null;
+        input.addEventListener('change', function () {
+          var f = input.files && input.files[0];
+          if (!f) return;
+          if (url) URL.revokeObjectURL(url);
+          url = URL.createObjectURL(f);
+          vid.src = url; vid.play(); showToast('Playing: ' + f.name); sfx('success');
+        });
+        win.el.querySelector('#video-clear').addEventListener('click', function () {
+          vid.pause(); vid.removeAttribute('src'); vid.load();
+          if (url) { URL.revokeObjectURL(url); url = null; }
+          input.value = '';
+        });
+      }
+    },
+    todo: {
+      title: 'To-Do Board', icon: '📋', width: 700, height: 420,
+      content: function () {
+        return '<div class="todo-body" id="todo-board"></div>';
+      },
+      init: function (win) {
+        var data = store.todo || {
+          todo: ['Try OrbitOS Movies', 'Write a sticky note'],
+          doing: ['Polish the desktop'],
+          done: ['Install nothing (browser only)']
+        };
+        var cols = [
+          { key: 'todo', title: 'To Do' },
+          { key: 'doing', title: 'Doing' },
+          { key: 'done', title: 'Done' }
+        ];
+        function save() { saveStore({ todo: data }); store = loadStore(); }
+        function render() {
+          var board = win.el.querySelector('#todo-board'); board.innerHTML = '';
+          cols.forEach(function (col) {
+            var c = document.createElement('div'); c.className = 'todo-col';
+            c.innerHTML = '<div class="todo-col-header"><span>' + col.title + '</span><span style="color:var(--text-dim);font-weight:400">' + (data[col.key] || []).length + '</span></div>' +
+              '<div class="todo-cards" data-col="' + col.key + '"></div>' +
+              '<button type="button" class="todo-add" data-col="' + col.key + '">+ Add</button>';
+            board.appendChild(c);
+            var cards = c.querySelector('.todo-cards');
+            (data[col.key] || []).forEach(function (text, idx) {
+              var card = document.createElement('div');
+              card.className = 'todo-card'; card.draggable = true; card.textContent = text;
+              card.dataset.col = col.key; card.dataset.idx = idx;
+              card.addEventListener('dragstart', function (e) {
+                e.dataTransfer.setData('text/plain', col.key + '|' + idx);
+              });
+              card.addEventListener('dblclick', function () {
+                if (!confirm('Delete this card?')) return;
+                data[col.key].splice(idx, 1); save(); render();
+              });
+              cards.appendChild(card);
+            });
+            cards.addEventListener('dragover', function (e) { e.preventDefault(); });
+            cards.addEventListener('drop', function (e) {
+              e.preventDefault();
+              var parts = e.dataTransfer.getData('text/plain').split('|');
+              var from = parts[0], fi = +parts[1];
+              if (!data[from] || data[from][fi] == null) return;
+              var item = data[from].splice(fi, 1)[0];
+              data[col.key].push(item); save(); render(); sfx('click');
+            });
+            c.querySelector('.todo-add').addEventListener('click', function () {
+              var t = prompt('New card:');
+              if (!t) return;
+              data[col.key].push(t); save(); render(); sfx('success');
+            });
+          });
+        }
+        render();
+      }
+    },
+    markdown: {
+      title: 'Markdown', icon: '📄', width: 720, height: 480,
+      content: function () {
+        return '<div class="md-body"><div class="md-pane"><label>Markdown</label>' +
+          '<textarea id="md-input" spellcheck="false"></textarea></div>' +
+          '<div class="md-pane"><label>Preview</label><div class="md-preview" id="md-preview"></div></div></div>';
+      },
+      init: function (win) {
+        var input = win.el.querySelector('#md-input');
+        var preview = win.el.querySelector('#md-preview');
+        var def = '# Hello OrbitOS\n\nWrite **markdown** on the left.\n\n- Lists\n- `code`\n- [links](https://example.com)';
+        input.value = store.markdown || def;
+        function esc(s) {
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+        function inline(t) {
+          t = esc(t);
+          t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          t = t.replace(/`(.+?)`/g, '<code>$1</code>');
+          t = t.replace(/\[(.+?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+          return t;
+        }
+        function renderMd(src) {
+          var lines = String(src).split('\n');
+          var html = '', inCode = false;
+          lines.forEach(function (line) {
+            if (line.indexOf('```') === 0) {
+              if (inCode) { html += '</code></pre>'; inCode = false; }
+              else { html += '<pre><code>'; inCode = true; }
+              return;
+            }
+            if (inCode) { html += esc(line) + '\n'; return; }
+            if (/^### /.test(line)) html += '<h3>' + esc(line.slice(4)) + '</h3>';
+            else if (/^## /.test(line)) html += '<h2>' + esc(line.slice(3)) + '</h2>';
+            else if (/^# /.test(line)) html += '<h1>' + esc(line.slice(2)) + '</h1>';
+            else if (/^[-*] /.test(line)) html += '<li>' + inline(line.slice(2)) + '</li>';
+            else if (!line.trim()) html += '<br>';
+            else html += '<p>' + inline(line) + '</p>';
+          });
+          if (inCode) html += '</code></pre>';
+          preview.innerHTML = html;
+        }
+        function sync() {
+          renderMd(input.value);
+          saveStore({ markdown: input.value }); store = loadStore();
+        }
+        input.addEventListener('input', sync); sync();
+      }
+    },
     about: {
       title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 480,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.3.0 — Power Pack</p>' +
+          '<p class="version">Version 1.4.0 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
           '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🌐 Browser</span><span>💻 Terminal</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.3.0</strong> — Themes, command palette, lock, session restore, desktop clock, Connect Four, custom wallpaper, fullscreen</li><li><strong>1.2.0</strong> — Stickies, Task Manager, Weather, Minesweeper, Pong, Run, search, screensaver</li><li><strong>1.1.0</strong> — Snap, shortcuts, calendar, mute, tips, paint tools, mobile, wallpapers</li>' +
+          '<li><strong>1.4.0</strong> — Movies, Video, To-Do, Markdown, Solitaire, desktop stickies, icon drag, volume, clipboard, reduced motion</li><li><strong>1.3.0</strong> — Themes, command palette, lock, session restore, desktop clock, Connect Four</li><li><strong>1.2.0</strong> — Stickies, Task Manager, Weather, Minesweeper, Pong, Run, search, screensaver</li><li><strong>1.1.0</strong> — Snap, shortcuts, calendar, mute, tips, paint tools, mobile, wallpapers</li>' +
           '<li><strong>1.0.0</strong> — Initial desktop, apps, games</li></ul></div>' +
           '<p style="margin-top:16px;font-size:0.78rem;opacity:0.6">Made for GitHub Pages</p></div>';
       },
@@ -1444,7 +1640,7 @@
       terminal: 'terminal', shell: 'terminal', notepad: 'notepad', calc: 'calculator', calculator: 'calculator',
       paint: 'paint', files: 'files', explorer: 'files', settings: 'settings', about: 'about',
       stickies: 'stickies', sticky: 'stickies', notes: 'stickies', tasks: 'taskmgr', taskmgr: 'taskmgr',
-      task: 'taskmgr', weather: 'weather', snake: 'games', pong: 'games', mines: 'games', c4: 'games', connect: 'games'
+      task: 'taskmgr', weather: 'weather', movies: 'movies', video: 'video', todo: 'todo', markdown: 'markdown', snake: 'games', pong: 'games', mines: 'games', c4: 'games', connect: 'games'
     };
     if (map[cmd]) {
       openApp(map[cmd]);
@@ -1583,12 +1779,18 @@
     { id: 'stickies', icon: '📌', label: 'Sticky Notes', type: 'app' },
     { id: 'taskmgr', icon: '📊', label: 'Task Manager', type: 'app' },
     { id: 'weather', icon: '🌤️', label: 'Weather', type: 'app' },
+    { id: 'movies', icon: '🎬', label: 'Movies', type: 'app' },
+    { id: 'video', icon: '📽️', label: 'Video Player', type: 'app' },
+    { id: 'todo', icon: '📋', label: 'To-Do Board', type: 'app' },
+    { id: 'markdown', icon: '📄', label: 'Markdown Editor', type: 'app' },
     { id: 'settings', icon: '⚙️', label: 'Settings', type: 'app' },
     { id: 'about', icon: 'ℹ️', label: 'About OrbitOS', type: 'app' },
     { id: 'snake', icon: '🐍', label: 'Play Snake', type: 'game', fn: function () { openSnake(); } },
     { id: 'mines', icon: '💣', label: 'Play Minesweeper', type: 'game', fn: function () { openMines(); } },
     { id: 'pong', icon: '🏓', label: 'Play Pong', type: 'game', fn: function () { openPong(); } },
     { id: 'c4', icon: '🔴', label: 'Play Connect Four', type: 'game', fn: function () { openConnectFour(); } },
+    { id: 'solitaire', icon: '🃏', label: 'Play Solitaire', type: 'game', fn: function () { openSolitaire(); } },
+    { id: 'sticky', icon: '📌', label: 'Add desktop sticky', type: 'action', fn: function () { addFloatSticky(); } },
     { id: 'run', icon: '▷', label: 'Run dialog', type: 'action', fn: function () { openRunDialog(); } },
     { id: 'lock', icon: '🔒', label: 'Lock screen', type: 'action', fn: function () { lockScreen(); } },
     { id: 'fullscreen', icon: '⛶', label: 'Toggle fullscreen', type: 'action', fn: function () { toggleFullscreen(); } },
@@ -1654,6 +1856,299 @@
     } else {
       document.exitFullscreen && document.exitFullscreen();
     }
+  }
+
+
+  function openSolitaire() {
+    const win = createWindow('solitaire-game', 'Solitaire', '🃏',
+      '<div class="sol-body"><div class="game-btn-row"><button type="button" id="sol-new">New Game</button><span id="sol-msg" style="font-size:0.8rem;color:var(--text-dim)"></span></div>' +
+      '<div class="sol-row" id="sol-top"></div><div class="sol-row" id="sol-tab"></div></div>', 700, 480);
+    setTimeout(function () {
+      var suits = ['♠','♥','♦','♣'], ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+      var deck, waste, foundations, tableau, selected = null;
+      function makeDeck() {
+        var d = [];
+        suits.forEach(function (s) {
+          ranks.forEach(function (r, i) {
+            d.push({ suit: s, rank: r, val: i + 1, red: s === '♥' || s === '♦', face: false, id: s + r });
+          });
+        });
+        for (var i = d.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = d[i]; d[i] = d[j]; d[j] = t;
+        }
+        return d;
+      }
+      function deal() {
+        deck = makeDeck(); waste = []; foundations = [[], [], [], []]; tableau = [[], [], [], [], [], [], []];
+        selected = null;
+        for (var c = 0; c < 7; c++) {
+          for (var n = 0; n <= c; n++) {
+            var card = deck.pop();
+            card.face = n === c;
+            tableau[c].push(card);
+          }
+        }
+        win.el.querySelector('#sol-msg').textContent = 'Click stock · stack red/black · K on empty';
+        render();
+      }
+      function cardEl(card, face) {
+        var d = document.createElement('div');
+        d.className = 'sol-card' + (card.red ? ' red' : '') + (!face ? ' face-down' : '');
+        d.dataset.id = card.id;
+        if (face) d.innerHTML = '<span>' + card.rank + card.suit + '</span><span style="align-self:flex-end">' + card.suit + '</span>';
+        return d;
+      }
+      function render() {
+        var top = win.el.querySelector('#sol-top'); top.innerHTML = '';
+        var stock = document.createElement('div'); stock.className = 'sol-pile';
+        if (deck.length) {
+          var back = document.createElement('div'); back.className = 'sol-card face-down';
+          back.addEventListener('click', function () {
+            if (!deck.length) {
+              deck = waste.reverse().map(function (c) { c.face = false; return c; });
+              waste = [];
+            } else {
+              var c = deck.pop(); c.face = true; waste.push(c);
+            }
+            selected = null; render();
+          });
+          stock.appendChild(back);
+        } else {
+          stock.style.borderStyle = 'dashed';
+          stock.addEventListener('click', function () {
+            deck = waste.reverse().map(function (c) { c.face = false; return c; });
+            waste = []; selected = null; render();
+          });
+        }
+        top.appendChild(stock);
+        var wastePile = document.createElement('div'); wastePile.className = 'sol-pile';
+        if (waste.length) {
+          var w = cardEl(waste[waste.length - 1], true);
+          w.addEventListener('click', function () { pick('waste', waste.length - 1); });
+          wastePile.appendChild(w);
+        }
+        top.appendChild(wastePile);
+        for (var f = 0; f < 4; f++) {
+          (function (f) {
+            var pile = document.createElement('div'); pile.className = 'sol-pile';
+            if (foundations[f].length) pile.appendChild(cardEl(foundations[f][foundations[f].length - 1], true));
+            pile.addEventListener('click', function () { dropFoundation(f); });
+            top.appendChild(pile);
+          })(f);
+        }
+        var tab = win.el.querySelector('#sol-tab'); tab.innerHTML = '';
+        tableau.forEach(function (col, ci) {
+          var pile = document.createElement('div');
+          pile.className = 'sol-pile sol-tableau';
+          pile.style.height = (100 + Math.max(0, col.length - 1) * 22) + 'px';
+          if (!col.length) {
+            pile.addEventListener('click', function () { dropTableau(ci); });
+          }
+          col.forEach(function (card, ri) {
+            var el = cardEl(card, card.face);
+            el.style.top = (ri * 22) + 'px';
+            el.style.zIndex = ri;
+            if (card.face) {
+              el.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (selected && selected.kind === 'tab' && selected.ci === ci) {
+                  selected = null; render(); return;
+                }
+                pick('tab', ri, ci);
+              });
+            }
+            pile.appendChild(el);
+          });
+          pile.addEventListener('click', function () { if (col.length) dropTableau(ci); });
+          tab.appendChild(pile);
+        });
+        checkWin();
+      }
+      function pick(kind, idx, ci) {
+        if (kind === 'waste') selected = { kind: 'waste' };
+        else selected = { kind: 'tab', ci: ci, ri: idx };
+        sfx('click');
+      }
+      function takeSelected() {
+        if (!selected) return null;
+        if (selected.kind === 'waste') {
+          if (!waste.length) return null;
+          return [waste[waste.length - 1]];
+        }
+        return tableau[selected.ci].slice(selected.ri);
+      }
+      function removeSelected() {
+        if (!selected) return;
+        if (selected.kind === 'waste') waste.pop();
+        else {
+          tableau[selected.ci] = tableau[selected.ci].slice(0, selected.ri);
+          var col = tableau[selected.ci];
+          if (col.length && !col[col.length - 1].face) col[col.length - 1].face = true;
+        }
+        selected = null;
+      }
+      function canStack(moving, target) {
+        if (!target) return moving[0].val === 13;
+        return moving[0].red !== target.red && moving[0].val === target.val - 1;
+      }
+      function dropTableau(ci) {
+        var mov = takeSelected();
+        if (!mov) return;
+        var target = tableau[ci].length ? tableau[ci][tableau[ci].length - 1] : null;
+        if (!canStack(mov, target)) return;
+        removeSelected();
+        tableau[ci] = tableau[ci].concat(mov);
+        render();
+      }
+      function dropFoundation(f) {
+        var mov = takeSelected();
+        if (!mov || mov.length !== 1) return;
+        var card = mov[0];
+        var pile = foundations[f];
+        if (!pile.length) {
+          if (card.val !== 1) return;
+        } else {
+          var top = pile[pile.length - 1];
+          if (top.suit !== card.suit || card.val !== top.val + 1) return;
+        }
+        removeSelected();
+        foundations[f].push(card);
+        render(); sfx('success');
+      }
+      function checkWin() {
+        if (foundations.every(function (p) { return p.length === 13; })) {
+          win.el.querySelector('#sol-msg').textContent = 'You win!';
+          showToast('Solitaire: You win!'); sfx('success');
+        }
+      }
+      win.el.querySelector('#sol-new').addEventListener('click', deal);
+      deal();
+    }, 50);
+  }
+
+  var clipHistory = [];
+  function pushClip(text) {
+    if (!text || !String(text).trim()) return;
+    text = String(text).slice(0, 500);
+    clipHistory = clipHistory.filter(function (c) { return c !== text; });
+    clipHistory.unshift(text);
+    if (clipHistory.length > 20) clipHistory.pop();
+    renderClip();
+  }
+  function renderClip() {
+    var list = document.getElementById('clip-list');
+    if (!list) return;
+    if (!clipHistory.length) { list.innerHTML = '<div class="clip-empty">Copy text in Notepad or elsewhere — history stays in this session</div>'; return; }
+    list.innerHTML = clipHistory.map(function (t, i) {
+      return '<div class="clip-item" data-i="' + i + '">' + t.replace(/</g, '&lt;').slice(0, 120) + (t.length > 120 ? '…' : '') + '</div>';
+    }).join('');
+    list.querySelectorAll('.clip-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var t = clipHistory[+el.dataset.i];
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t);
+        showToast('Copied to clipboard'); sfx('click');
+      });
+    });
+  }
+
+  function addFloatSticky(opts) {
+    opts = opts || {};
+    var notes = store.floatStickies || [];
+    var note = {
+      id: opts.id || Date.now(),
+      text: opts.text || '',
+      color: opts.color || 'yellow',
+      left: opts.left != null ? opts.left : (80 + Math.random() * 200),
+      top: opts.top != null ? opts.top : (80 + Math.random() * 150)
+    };
+    if (!opts.id) { notes.push(note); saveStore({ floatStickies: notes }); store = loadStore(); }
+    var el = document.createElement('div');
+    el.className = 'float-sticky' + (note.color !== 'yellow' ? ' ' + note.color : '');
+    el.style.left = note.left + 'px'; el.style.top = note.top + 'px';
+    el.dataset.id = note.id;
+    el.innerHTML = '<button type="button" class="fs-close">✕</button><textarea placeholder="Sticky…">' + (note.text || '') + '</textarea>';
+    document.getElementById('float-stickies').appendChild(el);
+    var ta = el.querySelector('textarea');
+    ta.addEventListener('input', function () {
+      var all = store.floatStickies || [];
+      var n = all.find(function (x) { return x.id === note.id; });
+      if (n) { n.text = ta.value; saveStore({ floatStickies: all }); store = loadStore(); }
+    });
+    el.querySelector('.fs-close').addEventListener('click', function () {
+      el.remove();
+      var all = (store.floatStickies || []).filter(function (x) { return x.id !== note.id; });
+      saveStore({ floatStickies: all }); store = loadStore();
+    });
+    // drag
+    var dragging = false, ox = 0, oy = 0;
+    el.addEventListener('mousedown', function (e) {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+      dragging = true; ox = e.clientX - el.offsetLeft; oy = e.clientY - el.offsetTop; e.preventDefault();
+    });
+    document.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      el.style.left = (e.clientX - ox) + 'px'; el.style.top = (e.clientY - oy) + 'px';
+    });
+    document.addEventListener('mouseup', function () {
+      if (!dragging) return;
+      dragging = false;
+      var all = store.floatStickies || [];
+      var n = all.find(function (x) { return x.id === note.id; });
+      if (n) {
+        n.left = parseInt(el.style.left, 10) || 0;
+        n.top = parseInt(el.style.top, 10) || 0;
+        saveStore({ floatStickies: all }); store = loadStore();
+      }
+    });
+  }
+  function restoreFloatStickies() {
+    (store.floatStickies || []).forEach(function (n) { addFloatSticky(n); });
+  }
+
+  function setupIconDrag() {
+    var icons = document.getElementById('desktop-icons');
+    if (!icons) return;
+    var positions = store.iconPos || {};
+    Array.prototype.forEach.call(icons.querySelectorAll('.desktop-icon'), function (icon) {
+      var app = icon.dataset.app;
+      if (positions[app]) {
+        icon.style.position = 'absolute';
+        icon.style.left = positions[app].left + 'px';
+        icon.style.top = positions[app].top + 'px';
+        icon.style.margin = '0';
+      }
+      var dragging = false, ox = 0, oy = 0, moved = false;
+      icon.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        dragging = true; moved = false;
+        var rect = icon.getBoundingClientRect();
+        var parent = icons.getBoundingClientRect();
+        ox = e.clientX - rect.left; oy = e.clientY - rect.top;
+        icon.classList.add('dragging');
+        icon.style.position = 'absolute';
+        icon.style.margin = '0';
+      });
+      document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        moved = true;
+        var parent = icons.getBoundingClientRect();
+        var left = e.clientX - parent.left - ox;
+        var top = e.clientY - parent.top - oy;
+        icon.style.left = Math.max(0, left) + 'px';
+        icon.style.top = Math.max(0, top) + 'px';
+      });
+      document.addEventListener('mouseup', function () {
+        if (!dragging) return;
+        dragging = false;
+        icon.classList.remove('dragging');
+        if (moved) {
+          positions[app] = { left: parseInt(icon.style.left, 10) || 0, top: parseInt(icon.style.top, 10) || 0 };
+          saveStore({ iconPos: positions }); store = loadStore();
+        }
+      });
+    });
+    // prevent double-click open if we just dragged - handled by moved flag per icon is imperfect; ok
   }
 
   function setupUI() {
@@ -1827,6 +2322,55 @@
       if (!item) return;
       if (item.dataset.action === 'lock') lockScreen();
       if (item.dataset.action === 'fullscreen') toggleFullscreen();
+    });
+
+    // Clipboard history
+    document.addEventListener('copy', function () {
+      setTimeout(function () {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(pushClip).catch(function () {});
+        }
+      }, 50);
+    });
+    document.addEventListener('cut', function () {
+      setTimeout(function () {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(pushClip).catch(function () {});
+        }
+      }, 50);
+    });
+    // Capture from notepad/textarea selection on Ctrl+C fallback
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        var sel = window.getSelection && String(window.getSelection());
+        if (sel) pushClip(sel);
+        if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
+          var t = e.target;
+          if (t.selectionStart != null && t.selectionEnd > t.selectionStart) {
+            pushClip(t.value.slice(t.selectionStart, t.selectionEnd));
+          }
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'V' || e.key === 'v')) {
+        e.preventDefault();
+        document.getElementById('clip-panel').classList.toggle('hidden');
+        renderClip();
+      }
+    });
+    var clipIcon = document.getElementById('clip-icon');
+    if (clipIcon) clipIcon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      document.getElementById('clip-panel').classList.toggle('hidden');
+      document.getElementById('notif-panel').classList.add('hidden');
+      renderClip(); sfx('click');
+    });
+    var clipClear = document.getElementById('clip-clear');
+    if (clipClear) clipClear.addEventListener('click', function (e) {
+      e.stopPropagation(); clipHistory = []; renderClip();
+    });
+    document.addEventListener('click', function (e) {
+      var panel = document.getElementById('clip-panel');
+      if (panel && !panel.contains(e.target) && e.target.id !== 'clip-icon') panel.classList.add('hidden');
     });
   }
 
