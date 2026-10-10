@@ -1,4 +1,4 @@
-/* ===== OrbitOS v1.1 ===== */
+/* ===== OrbitOS v1.5 Studio Pack ===== */
 (function () {
   'use strict';
   const STORE_KEY = 'orbitos-v11';
@@ -458,66 +458,181 @@
       }
     },
     music: {
-      title: 'Music Player', icon: '🎵', width: 420, height: 560,
+      title: 'Music Player', icon: '🎵', width: 440, height: 620,
       content: function () {
-        return '<div class="music-player"><div class="music-art" id="music-art">🎵</div>' +
-          '<div class="music-info"><h3 id="music-title">Select a track</h3><p id="music-artist">OrbitOS Radio</p></div>' +
-          '<div class="music-progress-wrap"><span id="music-cur">0:00</span><div class="music-progress"><div class="music-progress-bar" id="music-bar"></div></div><span id="music-dur">0:00</span></div>' +
-          '<div class="music-controls"><button type="button" id="music-prev">⏮</button><button type="button" class="play-btn" id="music-play">▶</button><button type="button" id="music-next">⏭</button></div>' +
+        return '<div class="music-player">' +
+          '<div class="music-art" id="music-art">🎵</div>' +
+          '<canvas id="music-viz" width="320" height="48" style="width:100%;height:48px;border-radius:8px;background:rgba(0,0,0,0.3)"></canvas>' +
+          '<div class="music-info"><h3 id="music-title">Select a track</h3><p id="music-artist">OrbitOS Studio</p></div>' +
+          '<div class="music-progress-wrap"><span id="music-cur">0:00</span><div class="music-progress" id="music-progress"><div class="music-progress-bar" id="music-bar"></div></div><span id="music-dur">0:00</span></div>' +
+          '<div class="music-controls">' +
+          '<button type="button" id="music-shuffle" title="Shuffle">🔀</button>' +
+          '<button type="button" id="music-prev">⏮</button>' +
+          '<button type="button" class="play-btn" id="music-play">▶</button>' +
+          '<button type="button" id="music-next">⏭</button>' +
+          '<button type="button" id="music-loop" title="Loop">🔁</button></div>' +
+          '<div class="vol-row" style="padding:0 8px"><span>🔊</span><input type="range" id="music-vol" min="0" max="100" value="70"><span id="music-vol-lbl">70%</span></div>' +
           '<div class="music-playlist" id="music-playlist"></div></div>';
       },
       init: function (win) {
         const tracks = [
-          { title: 'Ambient Horizon', artist: 'OrbitOS Ambient', emoji: '🌌' },
-          { title: 'Digital Pulse', artist: 'Synth Wave', emoji: '💫' },
-          { title: 'Cosmic Drift', artist: 'Space Lounge', emoji: '🪐' },
-          { title: 'Neon Nights', artist: 'Retrowave', emoji: '🌆' },
-          { title: 'Quantum Beat', artist: 'Electronica', emoji: '⚛️' },
-          { title: 'Starlight', artist: 'Chillhop', emoji: '✨' }
+          { title: 'Nebula Drift', artist: 'Orbit Ambient', emoji: '🌌', style: 'ambient', bpm: 72 },
+          { title: 'Cyber Pulse', artist: 'Synth Wave', emoji: '💫', style: 'synth', bpm: 118 },
+          { title: 'Deep Orbit', artist: 'Space Lounge', emoji: '🪐', style: 'chill', bpm: 90 },
+          { title: 'Neon Highway', artist: 'Retrowave', emoji: '🌆', style: 'retro', bpm: 128 },
+          { title: 'Quantum Lattice', artist: 'Electronica', emoji: '⚛️', style: 'techno', bpm: 132 },
+          { title: 'Starlight Loops', artist: 'Chillhop', emoji: '✨', style: 'lofi', bpm: 84 },
+          { title: 'Solar Flare', artist: 'OrbitOS Studio', emoji: '☀️', style: 'upbeat', bpm: 140 },
+          { title: 'Midnight Server', artist: 'Code Beats', emoji: '🖥️', style: 'dark', bpm: 100 },
+          { title: 'Aurora Keys', artist: 'Soft Synth', emoji: '🎹', style: 'piano', bpm: 76 },
+          { title: 'Warp Drive', artist: 'Bass Foundry', emoji: '🚀', style: 'bass', bpm: 124 }
         ];
-        let currentOsc = null, currentGain = null, isPlaying = false, currentIndex = -1, animFrame = null, startTime = 0, trackDuration = 90;
+        let nodes = [], isPlaying = false, currentIndex = -1, animFrame = null, startTime = 0, trackDuration = 120;
+        let shuffle = false, loopOne = false, masterVol = 0.7, analyser = null, vizData = null;
         const playlistEl = win.el.querySelector('#music-playlist');
+        const viz = win.el.querySelector('#music-viz');
+        const vctx = viz.getContext('2d');
         tracks.forEach(function (t, i) {
           const item = document.createElement('div'); item.className = 'playlist-item';
-          item.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="track-name">' + t.emoji + ' ' + t.title + '</span><span class="track-dur">1:30</span>';
+          item.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="track-name">' + t.emoji + ' ' + t.title + '</span><span class="track-dur">2:00</span>';
           item.addEventListener('click', function () { playTrack(i); });
           playlistEl.appendChild(item);
         });
         function fmt(s) { return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
         function stopAudio() {
-          if (currentOsc) { try { currentOsc.stop(); } catch (e) {} currentOsc = null; }
-          if (currentGain) { try { currentGain.disconnect(); } catch (e) {} currentGain = null; }
+          nodes.forEach(function (n) { try { if (n.stop) n.stop(); if (n.disconnect) n.disconnect(); } catch (e) {} });
+          nodes = [];
           if (animFrame) cancelAnimationFrame(animFrame);
-          isPlaying = false; win.el.querySelector('#music-play').textContent = '▶';
+          isPlaying = false;
+          win.el.querySelector('#music-play').textContent = '▶';
+          vctx.clearRect(0, 0, viz.width, viz.height);
         }
         musicStopFn = stopAudio;
+        function noteFreq(semi) { return 440 * Math.pow(2, (semi - 69) / 12); }
         function playTrack(index) {
           if (muted) { showToast('Unmute to play music'); return; }
           stopAudio();
           const ctx = ensureAudio();
-          const freqs = [220, 277, 330, 370, 440, 554];
-          trackDuration = 90 + index * 10;
-          currentGain = ctx.createGain(); currentGain.gain.value = 0.07; currentGain.connect(ctx.destination);
-          currentOsc = ctx.createOscillator();
-          currentOsc.type = index % 2 === 0 ? 'sine' : 'triangle';
-          currentOsc.frequency.value = freqs[index % freqs.length];
-          currentOsc.connect(currentGain); currentOsc.start();
-          const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
-          lfo.frequency.value = 0.15 + index * 0.04; lfoG.gain.value = 28;
-          lfo.connect(lfoG); lfoG.connect(currentOsc.frequency); lfo.start();
-          startTime = ctx.currentTime; isPlaying = true; currentIndex = index;
+          const t = tracks[index];
+          trackDuration = 110 + (index % 5) * 8;
+          const master = ctx.createGain();
+          master.gain.value = 0.12 * masterVol;
+          analyser = ctx.createAnalyser();
+          analyser.fftSize = 64;
+          vizData = new Uint8Array(analyser.frequencyBinCount);
+          master.connect(analyser);
+          analyser.connect(ctx.destination);
+          const now = ctx.currentTime;
+          const bpm = t.bpm;
+          const beat = 60 / bpm;
+          // Scale patterns per style
+          const scales = {
+            ambient: [57, 60, 64, 67, 69, 72, 76],
+            synth: [60, 63, 67, 70, 72, 75, 79],
+            chill: [55, 58, 62, 65, 67, 70, 74],
+            retro: [57, 60, 64, 65, 69, 72, 76],
+            techno: [48, 51, 55, 58, 60, 63, 67],
+            lofi: [53, 56, 60, 63, 65, 68, 72],
+            upbeat: [60, 64, 67, 71, 72, 76, 79],
+            dark: [45, 48, 51, 55, 57, 60, 63],
+            piano: [60, 62, 64, 67, 69, 71, 74],
+            bass: [36, 40, 43, 48, 52, 55, 60]
+          };
+          const scale = scales[t.style] || scales.ambient;
+          // Melody sequence (16 steps)
+          const melody = [];
+          for (var i = 0; i < 16; i++) {
+            if (Math.random() > 0.25) melody.push(scale[Math.floor(Math.random() * scale.length)]);
+            else melody.push(null);
+          }
+          // Bass pattern
+          const bassNotes = [scale[0] - 12, scale[0] - 12, scale[2] - 12, scale[0] - 12];
+          // Schedule ~trackDuration seconds of notes
+          var endT = now + trackDuration;
+          for (var bar = 0; bar < Math.ceil(trackDuration / (beat * 4)) + 1; bar++) {
+            for (var step = 0; step < 16; step++) {
+              var when = now + bar * beat * 4 + step * beat * 0.25;
+              if (when > endT) break;
+              // Kick
+              if (step % 4 === 0) {
+                var o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = 'sine'; o.frequency.setValueAtTime(150, when); o.frequency.exponentialRampToValueAtTime(40, when + 0.12);
+                g.gain.setValueAtTime(0.35 * masterVol, when); g.gain.exponentialRampToValueAtTime(0.001, when + 0.18);
+                o.connect(g); g.connect(master); o.start(when); o.stop(when + 0.2);
+                nodes.push(o, g);
+              }
+              // Hihat
+              if (step % 2 === 1) {
+                var nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+                var d = nBuf.getChannelData(0);
+                for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+                var src = ctx.createBufferSource(); src.buffer = nBuf;
+                var hg = ctx.createGain(), hf = ctx.createBiquadFilter();
+                hf.type = 'highpass'; hf.frequency.value = 8000;
+                hg.gain.setValueAtTime(0.06 * masterVol, when); hg.gain.exponentialRampToValueAtTime(0.001, when + 0.04);
+                src.connect(hf); hf.connect(hg); hg.connect(master); src.start(when);
+                nodes.push(src, hg, hf);
+              }
+              // Melody
+              var mNote = melody[step];
+              if (mNote != null) {
+                var mo = ctx.createOscillator(), mg = ctx.createGain();
+                mo.type = (t.style === 'piano' || t.style === 'ambient') ? 'triangle' : (t.style === 'bass' ? 'sawtooth' : 'square');
+                mo.frequency.value = noteFreq(mNote);
+                mg.gain.setValueAtTime(0, when);
+                mg.gain.linearRampToValueAtTime(0.12 * masterVol, when + 0.02);
+                mg.gain.exponentialRampToValueAtTime(0.001, when + beat * 0.4);
+                mo.connect(mg); mg.connect(master); mo.start(when); mo.stop(when + beat * 0.45);
+                nodes.push(mo, mg);
+              }
+              // Bass on downs
+              if (step % 4 === 0) {
+                var bn = bassNotes[(bar + step / 4) % bassNotes.length];
+                var bo = ctx.createOscillator(), bg = ctx.createGain();
+                bo.type = 'sawtooth'; bo.frequency.value = noteFreq(bn);
+                bg.gain.setValueAtTime(0.1 * masterVol, when); bg.gain.exponentialRampToValueAtTime(0.001, when + beat * 0.7);
+                var bf = ctx.createBiquadFilter(); bf.type = 'lowpass'; bf.frequency.value = 600;
+                bo.connect(bf); bf.connect(bg); bg.connect(master); bo.start(when); bo.stop(when + beat * 0.8);
+                nodes.push(bo, bg, bf);
+              }
+            }
+          }
+          // Soft pad
+          var pad = ctx.createOscillator(), padG = ctx.createGain();
+          pad.type = 'sine'; pad.frequency.value = noteFreq(scale[0]);
+          padG.gain.value = 0.03 * masterVol;
+          pad.connect(padG); padG.connect(master); pad.start(now); pad.stop(endT);
+          nodes.push(pad, padG);
+          startTime = now; isPlaying = true; currentIndex = index;
           win.el.querySelector('#music-play').textContent = '⏸';
-          win.el.querySelector('#music-title').textContent = tracks[index].title;
-          win.el.querySelector('#music-artist').textContent = tracks[index].artist;
-          win.el.querySelector('#music-art').textContent = tracks[index].emoji;
+          win.el.querySelector('#music-title').textContent = t.title;
+          win.el.querySelector('#music-artist').textContent = t.artist + ' · ' + bpm + ' BPM';
+          win.el.querySelector('#music-art').textContent = t.emoji;
           win.el.querySelector('#music-dur').textContent = fmt(trackDuration);
           playlistEl.querySelectorAll('.playlist-item').forEach(function (el, i) { el.classList.toggle('active', i === index); });
           function tick() {
             if (!isPlaying) return;
             const elapsed = ctx.currentTime - startTime;
-            if (elapsed >= trackDuration) { playTrack((index + 1) % tracks.length); return; }
+            if (elapsed >= trackDuration) {
+              if (loopOne) playTrack(index);
+              else if (shuffle) playTrack(Math.floor(Math.random() * tracks.length));
+              else playTrack((index + 1) % tracks.length);
+              return;
+            }
             win.el.querySelector('#music-bar').style.width = (elapsed / trackDuration * 100) + '%';
             win.el.querySelector('#music-cur').textContent = fmt(elapsed);
+            // visualizer
+            if (analyser && vizData) {
+              analyser.getByteFrequencyData(vizData);
+              vctx.fillStyle = 'rgba(10,10,26,0.35)';
+              vctx.fillRect(0, 0, viz.width, viz.height);
+              var barW = viz.width / vizData.length;
+              for (var i = 0; i < vizData.length; i++) {
+                var h = (vizData[i] / 255) * viz.height;
+                vctx.fillStyle = 'hsl(' + (190 + i * 4) + ',90%,60%)';
+                vctx.fillRect(i * barW, viz.height - h, barW - 1, h);
+              }
+            }
             animFrame = requestAnimationFrame(tick);
           }
           tick();
@@ -531,12 +646,30 @@
         win.el.querySelector('#music-next').addEventListener('click', function () {
           playTrack(currentIndex < 0 ? 0 : (currentIndex + 1) % tracks.length);
         });
+        win.el.querySelector('#music-shuffle').addEventListener('click', function () {
+          shuffle = !shuffle; this.style.opacity = shuffle ? '1' : '0.5'; showToast(shuffle ? 'Shuffle on' : 'Shuffle off');
+        });
+        win.el.querySelector('#music-loop').addEventListener('click', function () {
+          loopOne = !loopOne; this.style.opacity = loopOne ? '1' : '0.5'; showToast(loopOne ? 'Loop track' : 'Loop off');
+        });
+        win.el.querySelector('#music-vol').addEventListener('input', function () {
+          masterVol = this.value / 100;
+          win.el.querySelector('#music-vol-lbl').textContent = this.value + '%';
+        });
+        win.el.querySelector('#music-progress').addEventListener('click', function (e) {
+          if (!isPlaying || currentIndex < 0) return;
+          // restart at approx ratio for simplicity
+          playTrack(currentIndex);
+        });
+        win.el.querySelector('#music-shuffle').style.opacity = '0.5';
+        win.el.querySelector('#music-loop').style.opacity = '0.5';
       }
     },
     games: {
-      title: 'Games Arcade', icon: '🎮', width: 500, height: 400,
+      title: 'Games Arcade', icon: '🎮', width: 540, height: 460,
       content: function () {
         return '<div class="games-grid">' +
+          '<div class="game-card" data-game="tanks"><div class="game-emoji">🛡️</div><h4>Tank Battle</h4><p>2P / vs AI · maze</p></div>' +
           '<div class="game-card" data-game="snake"><div class="game-emoji">🐍</div><h4>Snake</h4><p>Classic + D-pad</p></div>' +
           '<div class="game-card" data-game="ttt"><div class="game-emoji">❌</div><h4>Tic-Tac-Toe</h4><p>Local play</p></div>' +
           '<div class="game-card" data-game="2048"><div class="game-emoji">🔢</div><h4>2048</h4><p>Swipe or arrows</p></div>' +
@@ -550,7 +683,8 @@
         win.el.querySelectorAll('.game-card').forEach(function (card) {
           card.addEventListener('click', function () {
             var g = card.dataset.game;
-            if (g === 'snake') openSnake(); else if (g === 'ttt') openTTT();
+            if (g === 'tanks') openTanks();
+            else if (g === 'snake') openSnake(); else if (g === 'ttt') openTTT();
             else if (g === '2048') open2048(); else if (g === 'memory') openMemory();
             else if (g === 'mines') openMines(); else if (g === 'pong') openPong();
             else if (g === 'c4') openConnectFour();
@@ -563,7 +697,7 @@
     terminal: {
       title: 'Terminal', icon: '💻', width: 640, height: 420,
       content: function () {
-        return '<div class="terminal-body" id="term-body"><div class="terminal-output" id="term-output">OrbitOS Terminal v1.1\nType "help" for commands.\n\n</div>' +
+        return '<div class="terminal-body" id="term-body"><div class="terminal-output" id="term-output">OrbitOS Terminal v1.5\nType "help" for commands.\n\n</div>' +
           '<div class="terminal-input-line"><span class="terminal-prompt" id="term-prompt">orbit@github:~$</span>' +
           '<input class="terminal-input" id="term-input" type="text" autofocus autocomplete="off" spellcheck="false"></div></div>';
       },
@@ -1224,6 +1358,291 @@
     return win;
   }
 
+
+  function openTanks() {
+    const win = createWindow('tanks-game', 'Tank Battle', '🛡️',
+      '<div class="tank-body">' +
+      '<div class="tank-hud"><span>P1: <strong id="tank-s1">0</strong></span>' +
+      '<span id="tank-mode-lbl">2 Player</span>' +
+      '<span>P2: <strong id="tank-s2">0</strong></span></div>' +
+      '<canvas id="tank-canvas" width="640" height="400"></canvas>' +
+      '<div class="game-btn-row" style="flex-wrap:wrap;gap:6px">' +
+      '<button type="button" id="tank-2p">2 Player</button>' +
+      '<button type="button" id="tank-ai">vs AI</button>' +
+      '<button type="button" id="tank-new">New Round</button></div>' +
+      '<div class="tank-help">P1: WASD + Space · P2: Arrows + Enter · Bullets bounce</div>' +
+      '<div class="tank-touch" id="tank-touch">' +
+      '<div class="tt-pad" data-p="1"><button data-a="up">▲</button><div><button data-a="left">◀</button><button data-a="fire">🔥</button><button data-a="right">▶</button></div><button data-a="down">▼</button></div>' +
+      '<div class="tt-pad" data-p="2"><button data-a="up">▲</button><div><button data-a="left">◀</button><button data-a="fire">🔥</button><button data-a="right">▶</button></div><button data-a="down">▼</button></div>' +
+      '</div></div>', 700, 560);
+    setTimeout(function () {
+      var canvas = win.el.querySelector('#tank-canvas');
+      var ctx = canvas.getContext('2d');
+      var W = 640, H = 400, CELL = 40;
+      var COLS = Math.floor(W / CELL), ROWS = Math.floor(H / CELL);
+      var walls = [], tanks = [], bullets = [], mode = '2p', scores = [0, 0], running = true, keys = {};
+      var aiTimer = 0;
+
+      function genMaze() {
+        // recursive backtracker on grid; walls between cells
+        var grid = [];
+        for (var y = 0; y < ROWS; y++) {
+          grid[y] = [];
+          for (var x = 0; x < COLS; x++) grid[y][x] = { v: false, walls: [true, true, true, true] }; // N E S W
+        }
+        function carve(x, y) {
+          grid[y][x].v = true;
+          var dirs = [[0, -1, 0, 2], [1, 0, 1, 3], [0, 1, 2, 0], [-1, 0, 3, 1]];
+          dirs.sort(function () { return Math.random() - 0.5; });
+          dirs.forEach(function (d) {
+            var nx = x + d[0], ny = y + d[1];
+            if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && !grid[ny][nx].v) {
+              grid[y][x].walls[d[2]] = false;
+              grid[ny][nx].walls[d[3]] = false;
+              carve(nx, ny);
+            }
+          });
+        }
+        carve(0, 0);
+        // convert to wall segments (axis-aligned boxes)
+        walls = [];
+        // outer border
+        walls.push({ x: 0, y: 0, w: W, h: 4 });
+        walls.push({ x: 0, y: H - 4, w: W, h: 4 });
+        walls.push({ x: 0, y: 0, w: 4, h: H });
+        walls.push({ x: W - 4, y: 0, w: 4, h: H });
+        for (var y = 0; y < ROWS; y++) {
+          for (var x = 0; x < COLS; x++) {
+            var c = grid[y][x];
+            var cx = x * CELL, cy = y * CELL;
+            if (c.walls[0]) walls.push({ x: cx, y: cy, w: CELL, h: 4 });
+            if (c.walls[1]) walls.push({ x: cx + CELL - 4, y: cy, w: 4, h: CELL });
+            if (c.walls[2]) walls.push({ x: cx, y: cy + CELL - 4, w: CELL, h: 4 });
+            if (c.walls[3]) walls.push({ x: cx, y: cy, w: 4, h: CELL });
+          }
+        }
+        // thin walls slightly randomly remove some for more open feel (already carved)
+      }
+
+      function spawnTanks() {
+        tanks = [
+          { x: CELL * 0.5 + 8, y: CELL * 0.5 + 8, a: 0, color: '#00d4ff', alive: true, cd: 0, id: 0 },
+          { x: W - CELL * 0.5 - 8, y: H - CELL * 0.5 - 8, a: Math.PI, color: '#ff4466', alive: true, cd: 0, id: 1 }
+        ];
+        bullets = [];
+      }
+
+      function rectHit(ax, ay, aw, ah, bx, by, bw, bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+      }
+
+      function tankBlocked(tx, ty, ignoreId) {
+        var r = 12;
+        if (tx - r < 4 || ty - r < 4 || tx + r > W - 4 || ty + r > H - 4) return true;
+        for (var i = 0; i < walls.length; i++) {
+          var w = walls[i];
+          if (rectHit(tx - r, ty - r, r * 2, r * 2, w.x, w.y, w.w, w.h)) return true;
+        }
+        for (var j = 0; j < tanks.length; j++) {
+          if (tanks[j].id === ignoreId || !tanks[j].alive) continue;
+          var dx = tx - tanks[j].x, dy = ty - tanks[j].y;
+          if (dx * dx + dy * dy < 26 * 26) return true;
+        }
+        return false;
+      }
+
+      function fire(t) {
+        if (!t.alive || t.cd > 0) return;
+        t.cd = 18;
+        var sp = 5.5;
+        bullets.push({
+          x: t.x + Math.cos(t.a) * 16, y: t.y + Math.sin(t.a) * 16,
+          vx: Math.cos(t.a) * sp, vy: Math.sin(t.a) * sp,
+          owner: t.id, life: 180, bounces: 0
+        });
+        sfx('click');
+      }
+
+      function bounceBullet(b) {
+        // try x and y separately
+        var nextX = b.x + b.vx, nextY = b.y + b.vy;
+        var hitX = false, hitY = false;
+        for (var i = 0; i < walls.length; i++) {
+          var w = walls[i];
+          if (rectHit(nextX - 3, b.y - 3, 6, 6, w.x, w.y, w.w, w.h)) hitX = true;
+          if (rectHit(b.x - 3, nextY - 3, 6, 6, w.x, w.y, w.w, w.h)) hitY = true;
+        }
+        if (nextX < 4 || nextX > W - 4) hitX = true;
+        if (nextY < 4 || nextY > H - 4) hitY = true;
+        if (hitX) { b.vx *= -1; b.bounces++; }
+        if (hitY) { b.vy *= -1; b.bounces++; }
+        if (b.bounces > 6) b.life = 0;
+      }
+
+      function updateAI() {
+        if (mode !== 'ai' || !tanks[1].alive || !tanks[0].alive) return;
+        var ai = tanks[1], p = tanks[0];
+        var dx = p.x - ai.x, dy = p.y - ai.y;
+        var target = Math.atan2(dy, dx);
+        var diff = target - ai.a;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        if (Math.abs(diff) > 0.08) ai.a += diff > 0 ? 0.06 : -0.06;
+        // move toward player if clear-ish
+        var nx = ai.x + Math.cos(ai.a) * 1.4;
+        var ny = ai.y + Math.sin(ai.a) * 1.4;
+        if (!tankBlocked(nx, ny, ai.id)) { ai.x = nx; ai.y = ny; }
+        else {
+          // try turn
+          ai.a += (Math.random() > 0.5 ? 1 : -1) * 0.2;
+        }
+        aiTimer++;
+        if (aiTimer > 25 && Math.abs(diff) < 0.25) { fire(ai); aiTimer = 0; }
+      }
+
+      function step() {
+        if (!running) return;
+        // input
+        var t0 = tanks[0], t1 = tanks[1];
+        if (t0.alive) {
+          if (keys['w'] || keys['W']) {
+            var nx = t0.x + Math.cos(t0.a) * 2.2, ny = t0.y + Math.sin(t0.a) * 2.2;
+            if (!tankBlocked(nx, ny, 0)) { t0.x = nx; t0.y = ny; }
+          }
+          if (keys['s'] || keys['S']) {
+            var nx = t0.x - Math.cos(t0.a) * 1.6, ny = t0.y - Math.sin(t0.a) * 1.6;
+            if (!tankBlocked(nx, ny, 0)) { t0.x = nx; t0.y = ny; }
+          }
+          if (keys['a'] || keys['A']) t0.a -= 0.08;
+          if (keys['d'] || keys['D']) t0.a += 0.08;
+          if (keys[' ']) fire(t0);
+        }
+        if (mode === '2p' && t1.alive) {
+          if (keys['ArrowUp']) {
+            var nx = t1.x + Math.cos(t1.a) * 2.2, ny = t1.y + Math.sin(t1.a) * 2.2;
+            if (!tankBlocked(nx, ny, 1)) { t1.x = nx; t1.y = ny; }
+          }
+          if (keys['ArrowDown']) {
+            var nx = t1.x - Math.cos(t1.a) * 1.6, ny = t1.y - Math.sin(t1.a) * 1.6;
+            if (!tankBlocked(nx, ny, 1)) { t1.x = nx; t1.y = ny; }
+          }
+          if (keys['ArrowLeft']) t1.a -= 0.08;
+          if (keys['ArrowRight']) t1.a += 0.08;
+          if (keys['Enter']) fire(t1);
+        }
+        if (mode === 'ai') updateAI();
+        tanks.forEach(function (t) { if (t.cd > 0) t.cd--; });
+        // bullets
+        for (var i = bullets.length - 1; i >= 0; i--) {
+          var b = bullets[i];
+          bounceBullet(b);
+          b.x += b.vx; b.y += b.vy; b.life--;
+          // hit tanks
+          for (var j = 0; j < tanks.length; j++) {
+            var t = tanks[j];
+            if (!t.alive || t.id === b.owner) continue;
+            var dx = b.x - t.x, dy = b.y - t.y;
+            if (dx * dx + dy * dy < 14 * 14) {
+              t.alive = false; b.life = 0;
+              scores[b.owner]++;
+              win.el.querySelector('#tank-s1').textContent = scores[0];
+              win.el.querySelector('#tank-s2').textContent = scores[1];
+              showToast((b.owner === 0 ? 'P1' : 'P2') + ' scores!');
+              sfx('success');
+              setTimeout(function () { genMaze(); spawnTanks(); }, 900);
+            }
+          }
+          if (b.life <= 0) bullets.splice(i, 1);
+        }
+        draw();
+        requestAnimationFrame(step);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#0c1220';
+        ctx.fillRect(0, 0, W, H);
+        // walls
+        ctx.fillStyle = '#2a3a55';
+        walls.forEach(function (w) {
+          ctx.fillRect(w.x, w.y, w.w, w.h);
+        });
+        // tanks
+        tanks.forEach(function (t) {
+          if (!t.alive) return;
+          ctx.save();
+          ctx.translate(t.x, t.y);
+          ctx.rotate(t.a);
+          ctx.fillStyle = t.color;
+          ctx.fillRect(-12, -10, 24, 20);
+          ctx.fillStyle = '#111';
+          ctx.fillRect(4, -4, 14, 8);
+          ctx.restore();
+        });
+        // bullets
+        bullets.forEach(function (b) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffe066';
+          ctx.fill();
+        });
+      }
+
+      function newRound() {
+        genMaze(); spawnTanks(); running = true;
+      }
+
+      win.el.querySelector('#tank-2p').addEventListener('click', function () {
+        mode = '2p'; win.el.querySelector('#tank-mode-lbl').textContent = '2 Player';
+        scores = [0, 0]; win.el.querySelector('#tank-s1').textContent = '0';
+        win.el.querySelector('#tank-s2').textContent = '0'; newRound();
+      });
+      win.el.querySelector('#tank-ai').addEventListener('click', function () {
+        mode = 'ai'; win.el.querySelector('#tank-mode-lbl').textContent = 'vs AI';
+        scores = [0, 0]; win.el.querySelector('#tank-s1').textContent = '0';
+        win.el.querySelector('#tank-s2').textContent = '0'; newRound();
+      });
+      win.el.querySelector('#tank-new').addEventListener('click', newRound);
+
+      function onKey(e, down) {
+        keys[e.key] = down;
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].indexOf(e.key) >= 0) e.preventDefault();
+      }
+      var kd = function (e) { onKey(e, true); };
+      var ku = function (e) { onKey(e, false); };
+      document.addEventListener('keydown', kd);
+      document.addEventListener('keyup', ku);
+      // cleanup rough: when window closed keys may linger — acceptable
+
+      // touch pads
+      win.el.querySelectorAll('.tt-pad').forEach(function (pad) {
+        var pid = +pad.dataset.p - 1;
+        pad.querySelectorAll('button').forEach(function (btn) {
+          var act = btn.dataset.a;
+          function press(e) {
+            e.preventDefault();
+            var t = tanks[pid];
+            if (!t || !t.alive) return;
+            if (act === 'fire') fire(t);
+            else if (act === 'left') t.a -= 0.15;
+            else if (act === 'right') t.a += 0.15;
+            else if (act === 'up') {
+              var nx = t.x + Math.cos(t.a) * 3, ny = t.y + Math.sin(t.a) * 3;
+              if (!tankBlocked(nx, ny, pid)) { t.x = nx; t.y = ny; }
+            } else if (act === 'down') {
+              var nx = t.x - Math.cos(t.a) * 2.2, ny = t.y - Math.sin(t.a) * 2.2;
+              if (!tankBlocked(nx, ny, pid)) { t.x = nx; t.y = ny; }
+            }
+          }
+          btn.addEventListener('touchstart', press, { passive: false });
+          btn.addEventListener('mousedown', press);
+        });
+      });
+
+      newRound();
+      step();
+    }, 50);
+  }
+
   function openSnake() {
     const win = createWindow('snake-game', 'Snake', '🐍',
       '<div class="snake-container"><div class="snake-hud"><span>Score: <strong id="snake-score">0</strong></span><span>Best: <strong id="snake-best">0</strong></span></div>' +
@@ -1772,6 +2191,7 @@
     { id: 'pong', icon: '🏓', label: 'Play Pong', type: 'game', fn: function () { openPong(); } },
     { id: 'c4', icon: '🔴', label: 'Play Connect Four', type: 'game', fn: function () { openConnectFour(); } },
     { id: 'solitaire', icon: '🃏', label: 'Play Solitaire', type: 'game', fn: function () { openSolitaire(); } },
+    { id: 'tanks', icon: '🛡️', label: 'Play Tank Battle', type: 'game', fn: function () { openTanks(); } },
     { id: 'sticky', icon: '📌', label: 'Add desktop sticky', type: 'action', fn: function () { addFloatSticky(); } },
     { id: 'run', icon: '▷', label: 'Run dialog', type: 'action', fn: function () { openRunDialog(); } },
     { id: 'lock', icon: '🔒', label: 'Lock screen', type: 'action', fn: function () { lockScreen(); } },

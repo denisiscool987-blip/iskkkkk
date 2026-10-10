@@ -1135,3 +1135,58 @@ body {
 #desktop-icons .desktop-icon.dragging {
   opacity: 1;
 }
+
+/* ===== v1.5 Tank Battle + mobile + music ===== */
+.tank-body { display: flex; flex-direction: column; align-items: center; padding: 10px; gap: 8px; height: 100%; }
+.tank-hud { display: flex; justify-content: space-between; width: 100%; max-width: 640px; font-family: var(--mono); font-size: 0.9rem; padding: 0 4px; }
+#tank-canvas { background: #0c1220; border: 2px solid var(--border); border-radius: 8px; max-width: 100%; touch-action: none; }
+.tank-help { font-size: 0.75rem; color: var(--text-dim); text-align: center; }
+.tank-touch { display: none; width: 100%; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.tt-pad { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tt-pad div { display: flex; gap: 4px; }
+.tt-pad button {
+  width: 48px; height: 48px; border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(0,212,255,0.12); color: var(--text); font-size: 1.1rem; cursor: pointer;
+}
+.tt-pad button:active { background: rgba(0,212,255,0.35); }
+.music-player .music-controls button { min-width: 36px; }
+.playlist-item { display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
+.playlist-item:hover, .playlist-item.active { background: rgba(0,212,255,0.12); }
+.playlist-item .num { color: var(--text-dim); width: 18px; }
+.playlist-item .track-dur { margin-left: auto; color: var(--text-dim); font-size: 0.75rem; }
+.play-btn { width: 48px !important; height: 48px !important; border-radius: 50% !important; font-size: 1.2rem !important; background: var(--accent) !important; color: #0a0a1a !important; border: none !important; }
+
+@media (max-width: 700px) {
+  .tank-touch { display: flex; }
+  .tank-help { display: none; }
+  #tank-canvas { width: 100%; height: auto; }
+  #desktop-icons { max-width: 96px; top: 8px; left: 4px; }
+  .desktop-icon { width: 72px; padding: 6px 2px; }
+  .icon-badge { width: 42px; height: 42px; font-size: 1.3rem; }
+  .desktop-icon span { font-size: 0.65rem; }
+  #start-menu { width: calc(100vw - 12px); left: 6px; max-height: 70vh; }
+  .start-apps { max-height: 40vh; }
+  .window { min-width: 260px; border-radius: 10px; }
+  #taskbar { height: 56px; padding-bottom: env(safe-area-inset-bottom, 0); }
+  :root { --taskbar-h: 56px; }
+  .taskbar-item { padding: 8px 10px; }
+  .games-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; padding: 10px; }
+  .game-card { padding: 12px 8px; }
+  .music-player { padding: 12px; }
+  #desktop-clock { bottom: calc(var(--taskbar-h) + 8px); }
+}
+@media (max-width: 480px) {
+  .games-grid { grid-template-columns: 1fr 1fr; }
+  #dc-time { font-size: 1.5rem; }
+}
+.games-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 14px;
+}
+.game-card {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 10px; text-align: center; cursor: pointer; transition: background 0.15s, transform 0.15s;
+}
+.game-card:hover { background: rgba(0,212,255,0.12); transform: translateY(-2px); }
+.game-emoji { font-size: 1.8rem; margin-bottom: 6px; }
+.game-card h4 { font-size: 0.88rem; margin-bottom: 2px; }
+.game-card p { font-size: 0.7rem; color: var(--text-dim); }
