@@ -669,7 +669,7 @@
       title: 'Games Arcade', icon: '🎮', width: 540, height: 460,
       content: function () {
         return '<div class="games-grid">' +
-          '<div class="game-card" data-game="tanks"><div class="game-emoji">🛡️</div><h4>Tank Battle</h4><p>2P / vs AI · maze</p></div>' +
+          '<div class="game-card" data-game="nightshift"><div class="game-emoji">🔦</div><h4>Nightshift</h4><p>Pixel Palace · 5 nights</p></div>' +
           '<div class="game-card" data-game="snake"><div class="game-emoji">🐍</div><h4>Snake</h4><p>Classic + D-pad</p></div>' +
           '<div class="game-card" data-game="ttt"><div class="game-emoji">❌</div><h4>Tic-Tac-Toe</h4><p>Local play</p></div>' +
           '<div class="game-card" data-game="2048"><div class="game-emoji">🔢</div><h4>2048</h4><p>Swipe or arrows</p></div>' +
@@ -683,7 +683,7 @@
         win.el.querySelectorAll('.game-card').forEach(function (card) {
           card.addEventListener('click', function () {
             var g = card.dataset.game;
-            if (g === 'tanks') openTanks();
+            if (g === 'nightshift') openNightshift();
             else if (g === 'snake') openSnake(); else if (g === 'ttt') openTTT();
             else if (g === '2048') open2048(); else if (g === 'memory') openMemory();
             else if (g === 'mines') openMines(); else if (g === 'pong') openPong();
@@ -1336,18 +1336,171 @@
       }
     },
     about: {
-      title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 480,
+      title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 520,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.4.1 — Studio Pack</p>' +
+          '<p class="version">Version 1.5.1 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
-          '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🌐 Browser</span><span>💻 Terminal</span><span>🎨 Paint</span></div>' +
+          '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🤖 Assistant</span><span>🔦 Nightshift</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.4.1</strong> — Removed Movies (embed errors); smarter Pong AI; icons locked; version sync</li><li><strong>1.4.0</strong> — Video, To-Do, Markdown, Solitaire, stickies, volume, clipboard, reduced motion</li><li><strong>1.3.0</strong> — Themes, command palette, lock, session restore, desktop clock, Connect Four</li><li><strong>1.2.0</strong> — Stickies, Task Manager, Weather, Minesweeper, Pong, Run, search, screensaver</li><li><strong>1.1.0</strong> — Snap, shortcuts, calendar, mute, tips, paint tools, mobile, wallpapers</li>' +
-          '<li><strong>1.0.0</strong> — Initial desktop, apps, games</li></ul></div>' +
-          '<p style="margin-top:16px;font-size:0.78rem;opacity:0.6">Made for GitHub Pages</p></div>';
+          '<li><strong>1.5.1</strong> — Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
+          '<li><strong>1.5.0</strong> — Generative music studio, mobile polish</li>' +
+          '<li><strong>1.4.x</strong> — Video, To-Do, Markdown, Solitaire, clipboard</li>' +
+          '<li><strong>1.3–1.0</strong> — Themes, games, window manager, core apps</li></ul></div>' +
+          '<p style="margin-top:16px;font-size:0.78rem;opacity:0.6">Made for GitHub Pages · MIT</p></div>';
       },
       init: function () {}
+    },
+    assistant: {
+      title: 'Orbit Assistant', icon: '🤖', width: 420, height: 520,
+      content: function () {
+        return '<div class="assist-body">' +
+          '<div class="assist-header"><span>🤖</span><div><strong>Orbit Assistant</strong><br><small>Local · keyword help</small></div></div>' +
+          '<div class="assist-chat" id="assist-chat"></div>' +
+          '<div class="assist-hints" id="assist-hints"></div>' +
+          '<div class="assist-input-row">' +
+          '<input type="text" id="assist-input" placeholder="Ask anything… e.g. how do I change wallpaper?" autocomplete="off">' +
+          '<button type="button" id="assist-send">Send</button></div></div>';
+      },
+      init: function (win) {
+        var chat = win.el.querySelector('#assist-chat');
+        var input = win.el.querySelector('#assist-input');
+        var hints = win.el.querySelector('#assist-hints');
+        var rules = [
+          { keys: ['wallpaper', 'background', 'desktop background'], text: 'Right-click the desktop → Change Wallpaper, or open Settings and paste a custom image URL.' },
+          { keys: ['theme', 'color', 'accent'], text: 'Open Settings → pick a theme swatch (cyan, purple, green, orange, rose).' },
+          { keys: ['music', 'song', 'playlist', 'audio', 'volume', 'mute'], text: 'Open Music from the desktop or Start. Use shuffle/loop/volume. Tray speaker mutes UI + music (or Ctrl settings).' },
+          { keys: ['game', 'play', 'snake', 'nightshift', 'freddy', 'horror', 'pixel palace', 'arcade'], text: 'Open Games Arcade. Nightshift is a 5-night security game at Pixel Palace. Other games: Snake, 2048, Solitaire, Pong…' },
+          { keys: ['nightshift', 'camera', 'door', 'power', 'animatronic', 'night'], text: 'Nightshift: close doors, check cameras, watch power. Survive 12AM→6AM. Cameras drain less than doors. Good luck.' },
+          { keys: ['shortcut', 'keyboard', 'hotkey', 'ctrl'], text: 'Ctrl+K command palette · Ctrl+R Run · Ctrl+L lock · Ctrl+W close window · Ctrl+M minimize · Ctrl+Shift+V clipboard · Alt+Tab switch.' },
+          { keys: ['lock', 'password', 'screen'], text: 'Lock with Ctrl+L or the lock icon in the tray. Click or press a key to unlock (no password on this demo).' },
+          { keys: ['clipboard', 'copy', 'paste'], text: 'Copy text anywhere, then Ctrl+Shift+V or the 📋 tray icon for session clipboard history.' },
+          { keys: ['file', 'explorer', 'readme', 'document'], text: 'Open Files to browse virtual folders. Double-click README.md to view it.' },
+          { keys: ['terminal', 'shell', 'command', 'neofetch'], text: 'Open Terminal. Try: help, neofetch, ls, cat README.md, fortune, date.' },
+          { keys: ['sticky', 'note', 'stickies'], text: 'Open Stickies or use command palette → Add desktop sticky. Drag floating notes around the desktop.' },
+          { keys: ['todo', 'kanban', 'task', 'board'], text: 'Open To-Do Board for a simple kanban (columns + cards).' },
+          { keys: ['markdown', 'md', 'preview'], text: 'Open Markdown for side-by-side edit + live preview.' },
+          { keys: ['video', 'movie', 'player'], text: 'Open Video Player and pick a local file from your device (stays in-browser only).' },
+          { keys: ['weather'], text: 'Open Weather for a lightweight forecast-style panel.' },
+          { keys: ['browser', 'web', 'proxy'], text: 'Proxy Browser: many sites block embeds — use bookmarks or Open in new tab.' },
+          { keys: ['paint', 'draw'], text: 'Open Paint to draw on a canvas with basic tools.' },
+          { keys: ['calculator', 'calc', 'math'], text: 'Open Calculator for basic arithmetic.' },
+          { keys: ['settings', 'preference'], text: 'Settings: theme, mute, custom wallpaper URL, reduced motion, clear local data.' },
+          { keys: ['mobile', 'phone', 'touch'], text: 'On phones: larger taskbar, touch-friendly icons. Games include on-screen controls where needed.' },
+          { keys: ['start', 'menu', 'search app'], text: 'Click ◉ on the taskbar. Type in the search box to filter apps.' },
+          { keys: ['run', 'open app'], text: 'Ctrl+R or Start → Run, then type an app name (browser, games, terminal…).' },
+          { keys: ['assistant', 'help', 'what can', 'how do'], text: 'I match keywords in your question to tips. Try: wallpaper, nightshift, shortcuts, music, games, lock…' },
+          { keys: ['clock', 'time', 'alarm'], text: 'Desktop clock is top-right. Open Clock app for larger time + simple alarm notes. Taskbar clock opens the calendar.' },
+          { keys: ['gallery', 'photo', 'image', 'picture'], text: 'Open Gallery to browse sample wallpapers and pastel placeholders.' },
+          { keys: ['shutdown', 'power', 'reboot'], text: 'Start → Shut Down. Reboot button reloads the page.' },
+          { keys: ['github', 'deploy', 'pages'], text: 'Upload index.html, styles.css, script.js to a repo root and enable GitHub Pages.' }
+        ];
+        var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Keyboard shortcuts', 'Open music', 'What games are there?'];
+        hints.innerHTML = starters.map(function (s) {
+          return '<button type="button" class="assist-chip">' + s + '</button>';
+        }).join('');
+        function addMsg(who, text) {
+          var d = document.createElement('div');
+          d.className = 'assist-msg ' + who;
+          d.textContent = text;
+          chat.appendChild(d);
+          chat.scrollTop = chat.scrollHeight;
+        }
+        function reply(q) {
+          q = (q || '').toLowerCase();
+          if (!q.trim()) return;
+          addMsg('user', q);
+          var best = null, score = 0;
+          rules.forEach(function (r) {
+            var s = 0;
+            r.keys.forEach(function (k) { if (q.indexOf(k) >= 0) s += k.length; });
+            if (s > score) { score = s; best = r; }
+          });
+          if (best && score > 0) addMsg('bot', best.text);
+          else addMsg('bot', 'Not sure yet. Try keywords: wallpaper, theme, music, nightshift, shortcuts, terminal, sticky, todo, settings, deploy…');
+          sfx('click');
+        }
+        win.el.querySelector('#assist-send').addEventListener('click', function () {
+          reply(input.value); input.value = '';
+        });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { reply(input.value); input.value = ''; }
+        });
+        hints.querySelectorAll('.assist-chip').forEach(function (btn) {
+          btn.addEventListener('click', function () { reply(btn.textContent); });
+        });
+        addMsg('bot', 'Hi! I’m your local Orbit Assistant. Ask about apps, shortcuts, Nightshift, music, or settings — I match keywords.');
+      }
+    },
+    clockapp: {
+      title: 'Clock', icon: '🕐', width: 360, height: 420,
+      content: function () {
+        return '<div class="clockapp-body"><div class="clockapp-time" id="capp-time">--:--:--</div>' +
+          '<div class="clockapp-date" id="capp-date"></div>' +
+          '<div class="clockapp-alarms"><h4>Quick notes / alarms</h4>' +
+          '<input type="text" id="capp-alarm" placeholder="e.g. 15:30 call mom">' +
+          '<button type="button" id="capp-add">Add</button>' +
+          '<ul id="capp-list"></ul></div></div>';
+      },
+      init: function (win) {
+        var list = store.alarms || [];
+        function render() {
+          win.el.querySelector('#capp-list').innerHTML = list.map(function (a, i) {
+            return '<li>' + a + ' <button type="button" data-i="' + i + '" class="capp-del">✕</button></li>';
+          }).join('') || '<li class="dim">No alarms yet</li>';
+          win.el.querySelectorAll('.capp-del').forEach(function (b) {
+            b.addEventListener('click', function () {
+              list.splice(+b.dataset.i, 1); saveStore({ alarms: list }); store = loadStore(); render();
+            });
+          });
+        }
+        function tick() {
+          var n = new Date();
+          win.el.querySelector('#capp-time').textContent = n.toLocaleTimeString();
+          win.el.querySelector('#capp-date').textContent = n.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        tick(); setInterval(tick, 1000); render();
+        win.el.querySelector('#capp-add').addEventListener('click', function () {
+          var v = win.el.querySelector('#capp-alarm').value.trim();
+          if (!v) return; list.push(v); saveStore({ alarms: list }); store = loadStore();
+          win.el.querySelector('#capp-alarm').value = ''; render(); sfx('success');
+        });
+      }
+    },
+    gallery: {
+      title: 'Gallery', icon: '🖼️', width: 560, height: 440,
+      content: function () {
+        return '<div class="gallery-body"><div class="gallery-grid" id="gal-grid"></div>' +
+          '<div class="gallery-view hidden" id="gal-view"><button type="button" id="gal-back">← Back</button>' +
+          '<div class="gallery-full" id="gal-full"></div></div></div>';
+      },
+      init: function (win) {
+        var items = [
+          { name: 'Nebula', bg: 'linear-gradient(135deg,#0a0a1a,#1a0a2e,#00d4ff33)' },
+          { name: 'Aurora', bg: 'linear-gradient(160deg,#0d1b2a,#4ade8044,#c084fc33)' },
+          { name: 'Sunset', bg: 'linear-gradient(160deg,#1a0a0a,#fb923c55,#fb718544)' },
+          { name: 'Ocean', bg: 'linear-gradient(160deg,#0a1520,#00d4ff33,#1e3a5f)' },
+          { name: 'Forest', bg: 'linear-gradient(160deg,#0a1a0a,#4ade8033,#0d1525)' },
+          { name: 'Rose', bg: 'linear-gradient(135deg,#1a0a12,#fb718555,#a855f733)' }
+        ];
+        var grid = win.el.querySelector('#gal-grid');
+        var view = win.el.querySelector('#gal-view');
+        var full = win.el.querySelector('#gal-full');
+        items.forEach(function (it) {
+          var card = document.createElement('div');
+          card.className = 'gallery-card';
+          card.style.background = it.bg;
+          card.innerHTML = '<span>' + it.name + '</span>';
+          card.addEventListener('click', function () {
+            grid.classList.add('hidden'); view.classList.remove('hidden');
+            full.style.background = it.bg; full.innerHTML = '<h3>' + it.name + '</h3><p>Sample artwork</p>';
+          });
+          grid.appendChild(card);
+        });
+        win.el.querySelector('#gal-back').addEventListener('click', function () {
+          view.classList.add('hidden'); grid.classList.remove('hidden');
+        });
+      }
     }
   };
 
@@ -1359,287 +1512,341 @@
   }
 
 
-  function openTanks() {
-    const win = createWindow('tanks-game', 'Tank Battle', '🛡️',
-      '<div class="tank-body">' +
-      '<div class="tank-hud"><span>P1: <strong id="tank-s1">0</strong></span>' +
-      '<span id="tank-mode-lbl">2 Player</span>' +
-      '<span>P2: <strong id="tank-s2">0</strong></span></div>' +
-      '<canvas id="tank-canvas" width="640" height="400"></canvas>' +
-      '<div class="game-btn-row" style="flex-wrap:wrap;gap:6px">' +
-      '<button type="button" id="tank-2p">2 Player</button>' +
-      '<button type="button" id="tank-ai">vs AI</button>' +
-      '<button type="button" id="tank-new">New Round</button></div>' +
-      '<div class="tank-help">P1: WASD + Space · P2: Arrows + Enter · Bullets bounce</div>' +
-      '<div class="tank-touch" id="tank-touch">' +
-      '<div class="tt-pad" data-p="1"><button data-a="up">▲</button><div><button data-a="left">◀</button><button data-a="fire">🔥</button><button data-a="right">▶</button></div><button data-a="down">▼</button></div>' +
-      '<div class="tt-pad" data-p="2"><button data-a="up">▲</button><div><button data-a="left">◀</button><button data-a="fire">🔥</button><button data-a="right">▶</button></div><button data-a="down">▼</button></div>' +
-      '</div></div>', 700, 560);
+
+  function openNightshift() {
+    const win = createWindow('nightshift-game', 'Nightshift: Pixel Palace', '🔦',
+      '<div class="ns-body">' +
+      '<div class="ns-top"><span id="ns-clock">12:00 AM</span><span id="ns-power">Power 100%</span><span id="ns-night">Night 1</span></div>' +
+      '<div class="ns-main">' +
+      '<canvas id="ns-canvas" width="640" height="360"></canvas>' +
+      '<div class="ns-cams hidden" id="ns-cams">' +
+      '<div class="ns-cam-grid" id="ns-cam-grid"></div>' +
+      '<canvas id="ns-cam-view" width="400" height="240"></canvas></div>' +
+      '</div>' +
+      '<div class="ns-controls">' +
+      '<button type="button" id="ns-left-door">L Door</button>' +
+      '<button type="button" id="ns-left-light">L Light</button>' +
+      '<button type="button" id="ns-monitor">Cams</button>' +
+      '<button type="button" id="ns-right-light">R Light</button>' +
+      '<button type="button" id="ns-right-door">R Door</button></div>' +
+      '<div class="ns-menu" id="ns-menu">' +
+      '<h2>Nightshift</h2><p>Pixel Palace Security</p>' +
+      '<p class="ns-lore">You are the night guard. Animatronics Byte, Circuit, Glitch & Static roam after dark. Check cameras. Manage power. Survive until 6 AM.</p>' +
+      '<button type="button" id="ns-start">Start Night</button>' +
+      '<div class="ns-nights" id="ns-nselect"></div></div>' +
+      '<div class="ns-jump hidden" id="ns-jump"><div class="ns-jump-inner">GOTCHA</div></div>' +
+      '</div>', 700, 560);
+
     setTimeout(function () {
-      var canvas = win.el.querySelector('#tank-canvas');
+      var canvas = win.el.querySelector('#ns-canvas');
       var ctx = canvas.getContext('2d');
-      var W = 640, H = 400, CELL = 40;
-      var COLS = Math.floor(W / CELL), ROWS = Math.floor(H / CELL);
-      var walls = [], tanks = [], bullets = [], mode = '2p', scores = [0, 0], running = true, keys = {};
-      var aiTimer = 0;
+      var camCanvas = win.el.querySelector('#ns-cam-view');
+      var cctx = camCanvas.getContext('2d');
+      var power = 100, hour = 0, night = 1, running = false, camsOpen = false;
+      var leftDoor = false, rightDoor = false, leftLight = false, rightLight = false;
+      var camId = 0, tickTimer = null, animFrame = null;
+      var rooms = ['Office', 'Show Stage', 'Dining', 'Backstage', 'Kitchen', 'Parts', 'Left Hall', 'Right Hall'];
+      // animatronic positions: room index 0=office danger
+      var bots = [
+        { name: 'Byte', room: 1, color: '#5b8def', aggro: 0.02 },
+        { name: 'Circuit', room: 1, color: '#e8b84a', aggro: 0.015 },
+        { name: 'Glitch', room: 5, color: '#c084fc', aggro: 0.025 },
+        { name: 'Static', room: 3, color: '#4ade80', aggro: 0.01 }
+      ];
+      var paths = {
+        // possible room transitions
+        1: [2, 3], 2: [1, 6, 7], 3: [1, 5, 2], 5: [3, 6], 6: [2, 0, 5], 7: [2, 0], 0: [6, 7]
+      };
 
-      function genMaze() {
-        // recursive backtracker on grid; walls between cells
-        var grid = [];
-        for (var y = 0; y < ROWS; y++) {
-          grid[y] = [];
-          for (var x = 0; x < COLS; x++) grid[y][x] = { v: false, walls: [true, true, true, true] }; // N E S W
+      function hourLabel() {
+        var h = [12, 1, 2, 3, 4, 5, 6];
+        return h[Math.min(hour, 6)] + ':00 AM';
+      }
+
+      function drain() {
+        var d = 0.012;
+        if (leftDoor) d += 0.04;
+        if (rightDoor) d += 0.04;
+        if (leftLight) d += 0.025;
+        if (rightLight) d += 0.025;
+        if (camsOpen) d += 0.02;
+        d *= (1 + (night - 1) * 0.12);
+        power = Math.max(0, power - d);
+        win.el.querySelector('#ns-power').textContent = 'Power ' + Math.floor(power) + '%';
+        if (power <= 0) {
+          leftDoor = rightDoor = leftLight = rightLight = camsOpen = false;
+          win.el.querySelector('#ns-cams').classList.add('hidden');
         }
-        function carve(x, y) {
-          grid[y][x].v = true;
-          var dirs = [[0, -1, 0, 2], [1, 0, 1, 3], [0, 1, 2, 0], [-1, 0, 3, 1]];
-          dirs.sort(function () { return Math.random() - 0.5; });
-          dirs.forEach(function (d) {
-            var nx = x + d[0], ny = y + d[1];
-            if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && !grid[ny][nx].v) {
-              grid[y][x].walls[d[2]] = false;
-              grid[ny][nx].walls[d[3]] = false;
-              carve(nx, ny);
-            }
-          });
-        }
-        carve(0, 0);
-        // convert to wall segments (axis-aligned boxes)
-        walls = [];
-        // outer border
-        walls.push({ x: 0, y: 0, w: W, h: 4 });
-        walls.push({ x: 0, y: H - 4, w: W, h: 4 });
-        walls.push({ x: 0, y: 0, w: 4, h: H });
-        walls.push({ x: W - 4, y: 0, w: 4, h: H });
-        for (var y = 0; y < ROWS; y++) {
-          for (var x = 0; x < COLS; x++) {
-            var c = grid[y][x];
-            var cx = x * CELL, cy = y * CELL;
-            if (c.walls[0]) walls.push({ x: cx, y: cy, w: CELL, h: 4 });
-            if (c.walls[1]) walls.push({ x: cx + CELL - 4, y: cy, w: 4, h: CELL });
-            if (c.walls[2]) walls.push({ x: cx, y: cy + CELL - 4, w: CELL, h: 4 });
-            if (c.walls[3]) walls.push({ x: cx, y: cy, w: 4, h: CELL });
+      }
+
+      function moveBots() {
+        bots.forEach(function (b) {
+          var chance = b.aggro * (0.7 + night * 0.35) * (hour + 1) * 0.35;
+          if (Math.random() > chance) return;
+          var opts = paths[b.room];
+          if (!opts || !opts.length) return;
+          // prefer moving toward office at later hours
+          var next = opts[Math.floor(Math.random() * opts.length)];
+          if (hour >= 3 && opts.indexOf(0) >= 0 && Math.random() < 0.35) next = 0;
+          // blocked by door?
+          if (next === 0) {
+            if (b.room === 6 && leftDoor) return;
+            if (b.room === 7 && rightDoor) return;
           }
-        }
-        // thin walls slightly randomly remove some for more open feel (already carved)
-      }
-
-      function spawnTanks() {
-        tanks = [
-          { x: CELL * 0.5 + 8, y: CELL * 0.5 + 8, a: 0, color: '#00d4ff', alive: true, cd: 0, id: 0 },
-          { x: W - CELL * 0.5 - 8, y: H - CELL * 0.5 - 8, a: Math.PI, color: '#ff4466', alive: true, cd: 0, id: 1 }
-        ];
-        bullets = [];
-      }
-
-      function rectHit(ax, ay, aw, ah, bx, by, bw, bh) {
-        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-      }
-
-      function tankBlocked(tx, ty, ignoreId) {
-        var r = 12;
-        if (tx - r < 4 || ty - r < 4 || tx + r > W - 4 || ty + r > H - 4) return true;
-        for (var i = 0; i < walls.length; i++) {
-          var w = walls[i];
-          if (rectHit(tx - r, ty - r, r * 2, r * 2, w.x, w.y, w.w, w.h)) return true;
-        }
-        for (var j = 0; j < tanks.length; j++) {
-          if (tanks[j].id === ignoreId || !tanks[j].alive) continue;
-          var dx = tx - tanks[j].x, dy = ty - tanks[j].y;
-          if (dx * dx + dy * dy < 26 * 26) return true;
-        }
-        return false;
-      }
-
-      function fire(t) {
-        if (!t.alive || t.cd > 0) return;
-        t.cd = 18;
-        var sp = 5.5;
-        bullets.push({
-          x: t.x + Math.cos(t.a) * 16, y: t.y + Math.sin(t.a) * 16,
-          vx: Math.cos(t.a) * sp, vy: Math.sin(t.a) * sp,
-          owner: t.id, life: 180, bounces: 0
+          b.room = next;
         });
-        sfx('click');
+        // check attack
+        bots.forEach(function (b) {
+          if (b.room !== 0) return;
+          var blocked = false;
+          // if they came from left/right hall and door closed
+          blocked = (leftDoor && rightDoor); // simplified: any door state checked via last hall
+          // If in office and corresponding door open — jumpscare
+          // Determine side: if more bots path from left
+          if (!leftDoor || !rightDoor) {
+            // if either door open and bot in office, risk jumpscare
+            if ((!leftDoor && Math.random() < 0.4) || (!rightDoor && Math.random() < 0.4) || (!leftDoor && !rightDoor)) {
+              jumpscare(b);
+            } else {
+              // push back to hall
+              b.room = Math.random() < 0.5 ? 6 : 7;
+            }
+          } else {
+            b.room = Math.random() < 0.5 ? 6 : 7;
+          }
+        });
       }
 
-      function bounceBullet(b) {
-        // try x and y separately
-        var nextX = b.x + b.vx, nextY = b.y + b.vy;
-        var hitX = false, hitY = false;
-        for (var i = 0; i < walls.length; i++) {
-          var w = walls[i];
-          if (rectHit(nextX - 3, b.y - 3, 6, 6, w.x, w.y, w.w, w.h)) hitX = true;
-          if (rectHit(b.x - 3, nextY - 3, 6, 6, w.x, w.y, w.w, w.h)) hitY = true;
+      function jumpscare(b) {
+        running = false;
+        clearInterval(tickTimer);
+        var j = win.el.querySelector('#ns-jump');
+        j.classList.remove('hidden');
+        j.querySelector('.ns-jump-inner').textContent = b.name.toUpperCase() + ' GOT YOU';
+        j.style.background = b.color;
+        sfx('error');
+        showToast('Night failed — ' + b.name);
+        setTimeout(function () {
+          j.classList.add('hidden');
+          win.el.querySelector('#ns-menu').classList.remove('hidden');
+        }, 2200);
+      }
+
+      function winNight() {
+        running = false;
+        clearInterval(tickTimer);
+        showToast('6 AM — You survived Night ' + night + '!');
+        sfx('success');
+        if (night < 5) night++;
+        win.el.querySelector('#ns-menu').classList.remove('hidden');
+        buildNightSelect();
+      }
+
+      function drawOffice() {
+        var w = canvas.width, h = canvas.height;
+        // pseudo-3D office
+        ctx.fillStyle = '#1a1520';
+        ctx.fillRect(0, 0, w, h);
+        // floor perspective
+        ctx.fillStyle = '#121018';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.55); ctx.lineTo(w, h * 0.55); ctx.lineTo(w, h); ctx.lineTo(0, h);
+        ctx.fill();
+        // back wall
+        ctx.fillStyle = '#252030';
+        ctx.fillRect(w * 0.15, h * 0.08, w * 0.7, h * 0.47);
+        // desk
+        ctx.fillStyle = '#2a2438';
+        ctx.fillRect(w * 0.2, h * 0.62, w * 0.6, h * 0.2);
+        ctx.fillStyle = '#3a3450';
+        ctx.fillRect(w * 0.35, h * 0.58, w * 0.3, h * 0.06);
+        // monitor on desk
+        ctx.fillStyle = camsOpen ? '#0a2030' : '#111';
+        ctx.fillRect(w * 0.38, h * 0.48, w * 0.24, h * 0.12);
+        if (camsOpen) {
+          ctx.fillStyle = '#00d4ff';
+          ctx.font = '10px monospace';
+          ctx.fillText('CAM FEED', w * 0.42, h * 0.55);
         }
-        if (nextX < 4 || nextX > W - 4) hitX = true;
-        if (nextY < 4 || nextY > H - 4) hitY = true;
-        if (hitX) { b.vx *= -1; b.bounces++; }
-        if (hitY) { b.vy *= -1; b.bounces++; }
-        if (b.bounces > 6) b.life = 0;
-      }
-
-      function updateAI() {
-        if (mode !== 'ai' || !tanks[1].alive || !tanks[0].alive) return;
-        var ai = tanks[1], p = tanks[0];
-        var dx = p.x - ai.x, dy = p.y - ai.y;
-        var target = Math.atan2(dy, dx);
-        var diff = target - ai.a;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        if (Math.abs(diff) > 0.08) ai.a += diff > 0 ? 0.06 : -0.06;
-        // move toward player if clear-ish
-        var nx = ai.x + Math.cos(ai.a) * 1.4;
-        var ny = ai.y + Math.sin(ai.a) * 1.4;
-        if (!tankBlocked(nx, ny, ai.id)) { ai.x = nx; ai.y = ny; }
-        else {
-          // try turn
-          ai.a += (Math.random() > 0.5 ? 1 : -1) * 0.2;
+        // left corridor
+        ctx.fillStyle = leftLight ? '#3a3830' : '#0d0c12';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.15); ctx.lineTo(w * 0.15, h * 0.2); ctx.lineTo(w * 0.15, h * 0.55); ctx.lineTo(0, h * 0.65);
+        ctx.fill();
+        if (leftDoor) {
+          ctx.fillStyle = '#444';
+          ctx.fillRect(2, h * 0.18, w * 0.12, h * 0.42);
+          ctx.fillStyle = '#666';
+          ctx.fillRect(w * 0.04, h * 0.35, 8, 20);
         }
-        aiTimer++;
-        if (aiTimer > 25 && Math.abs(diff) < 0.25) { fire(ai); aiTimer = 0; }
+        // right corridor
+        ctx.fillStyle = rightLight ? '#3a3830' : '#0d0c12';
+        ctx.beginPath();
+        ctx.moveTo(w, h * 0.15); ctx.lineTo(w * 0.85, h * 0.2); ctx.lineTo(w * 0.85, h * 0.55); ctx.lineTo(w, h * 0.65);
+        ctx.fill();
+        if (rightDoor) {
+          ctx.fillStyle = '#444';
+          ctx.fillRect(w * 0.86, h * 0.18, w * 0.12, h * 0.42);
+        }
+        // fan
+        ctx.strokeStyle = '#555';
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.28, 18, 0, Math.PI * 2);
+        ctx.stroke();
+        // bots visible in halls with light
+        bots.forEach(function (b) {
+          if (b.room === 6 && leftLight && !leftDoor) {
+            ctx.fillStyle = b.color;
+            ctx.beginPath(); ctx.arc(w * 0.07, h * 0.4, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#111'; ctx.font = '9px sans-serif'; ctx.fillText(b.name[0], w * 0.055, h * 0.42);
+          }
+          if (b.room === 7 && rightLight && !rightDoor) {
+            ctx.fillStyle = b.color;
+            ctx.beginPath(); ctx.arc(w * 0.93, h * 0.4, 14, 0, Math.PI * 2); ctx.fill();
+          }
+          if (b.room === 0) {
+            ctx.fillStyle = b.color;
+            ctx.beginPath(); ctx.arc(w * 0.5, h * 0.4, 22, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.fillText(b.name, w * 0.45, h * 0.41);
+          }
+        });
+        // power blackout
+        if (power <= 0) {
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#833';
+          ctx.font = '20px monospace';
+          ctx.fillText('POWER OUT', w * 0.38, h * 0.5);
+        }
+        // UI labels
+        ctx.fillStyle = '#888';
+        ctx.font = '11px monospace';
+        ctx.fillText(leftDoor ? 'DOOR CLOSED' : 'DOOR OPEN', 8, h - 10);
+        ctx.fillText(rightDoor ? 'DOOR CLOSED' : 'DOOR OPEN', w - 100, h - 10);
       }
 
-      function step() {
+      function drawCam() {
+        var w = camCanvas.width, h = camCanvas.height;
+        cctx.fillStyle = '#0a1018';
+        cctx.fillRect(0, 0, w, h);
+        // static noise
+        for (var i = 0; i < 80; i++) {
+          cctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.08) + ')';
+          cctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+        }
+        cctx.strokeStyle = '#00d4ff55';
+        cctx.strokeRect(4, 4, w - 8, h - 8);
+        cctx.fillStyle = '#00d4ff';
+        cctx.font = '14px monospace';
+        cctx.fillText('CAM ' + (camId + 1) + ' — ' + rooms[camId], 12, 24);
+        // room box
+        cctx.fillStyle = '#1a2230';
+        cctx.fillRect(40, 50, w - 80, h - 90);
+        // bots in this room
+        var inRoom = bots.filter(function (b) { return b.room === camId; });
+        inRoom.forEach(function (b, i) {
+          cctx.fillStyle = b.color;
+          cctx.beginPath();
+          cctx.arc(100 + i * 80, h * 0.55, 28, 0, Math.PI * 2);
+          cctx.fill();
+          cctx.fillStyle = '#fff';
+          cctx.font = '12px sans-serif';
+          cctx.fillText(b.name, 80 + i * 80, h * 0.55 + 5);
+        });
+        if (!inRoom.length) {
+          cctx.fillStyle = '#445';
+          cctx.font = '13px monospace';
+          cctx.fillText('No movement detected', w * 0.28, h * 0.55);
+        }
+        // scanline
+        cctx.fillStyle = 'rgba(0,0,0,0.15)';
+        for (var y = 0; y < h; y += 4) cctx.fillRect(0, y, w, 1);
+      }
+
+      function frame() {
         if (!running) return;
-        // input
-        var t0 = tanks[0], t1 = tanks[1];
-        if (t0.alive) {
-          if (keys['w'] || keys['W']) {
-            var nx = t0.x + Math.cos(t0.a) * 2.2, ny = t0.y + Math.sin(t0.a) * 2.2;
-            if (!tankBlocked(nx, ny, 0)) { t0.x = nx; t0.y = ny; }
+        drawOffice();
+        if (camsOpen) drawCam();
+        animFrame = requestAnimationFrame(frame);
+      }
+
+      function startNight() {
+        power = 100; hour = 0; running = true;
+        leftDoor = rightDoor = leftLight = rightLight = camsOpen = false;
+        bots.forEach(function (b, i) { b.room = i < 2 ? 1 : (i === 2 ? 5 : 3); });
+        win.el.querySelector('#ns-menu').classList.add('hidden');
+        win.el.querySelector('#ns-cams').classList.add('hidden');
+        win.el.querySelector('#ns-clock').textContent = hourLabel();
+        win.el.querySelector('#ns-night').textContent = 'Night ' + night;
+        win.el.querySelector('#ns-power').textContent = 'Power 100%';
+        clearInterval(tickTimer);
+        tickTimer = setInterval(function () {
+          if (!running) return;
+          drain();
+          moveBots();
+          // time advance ~ every few ticks → hour
+          if (Math.random() < 0.08) {
+            hour++;
+            win.el.querySelector('#ns-clock').textContent = hourLabel();
+            if (hour >= 6) winNight();
           }
-          if (keys['s'] || keys['S']) {
-            var nx = t0.x - Math.cos(t0.a) * 1.6, ny = t0.y - Math.sin(t0.a) * 1.6;
-            if (!tankBlocked(nx, ny, 0)) { t0.x = nx; t0.y = ny; }
+          if (power <= 0 && Math.random() < 0.15) {
+            // free attack when power out
+            var attacker = bots[Math.floor(Math.random() * bots.length)];
+            attacker.room = 0;
+            jumpscare(attacker);
           }
-          if (keys['a'] || keys['A']) t0.a -= 0.08;
-          if (keys['d'] || keys['D']) t0.a += 0.08;
-          if (keys[' ']) fire(t0);
+        }, 900);
+        frame();
+        sfx('open');
+      }
+
+      function buildNightSelect() {
+        var box = win.el.querySelector('#ns-nselect');
+        box.innerHTML = '';
+        for (var i = 1; i <= 5; i++) {
+          (function (n) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = 'Night ' + n;
+            b.addEventListener('click', function () { night = n; startNight(); });
+            box.appendChild(b);
+          })(i);
         }
-        if (mode === '2p' && t1.alive) {
-          if (keys['ArrowUp']) {
-            var nx = t1.x + Math.cos(t1.a) * 2.2, ny = t1.y + Math.sin(t1.a) * 2.2;
-            if (!tankBlocked(nx, ny, 1)) { t1.x = nx; t1.y = ny; }
-          }
-          if (keys['ArrowDown']) {
-            var nx = t1.x - Math.cos(t1.a) * 1.6, ny = t1.y - Math.sin(t1.a) * 1.6;
-            if (!tankBlocked(nx, ny, 1)) { t1.x = nx; t1.y = ny; }
-          }
-          if (keys['ArrowLeft']) t1.a -= 0.08;
-          if (keys['ArrowRight']) t1.a += 0.08;
-          if (keys['Enter']) fire(t1);
-        }
-        if (mode === 'ai') updateAI();
-        tanks.forEach(function (t) { if (t.cd > 0) t.cd--; });
-        // bullets
-        for (var i = bullets.length - 1; i >= 0; i--) {
-          var b = bullets[i];
-          bounceBullet(b);
-          b.x += b.vx; b.y += b.vy; b.life--;
-          // hit tanks
-          for (var j = 0; j < tanks.length; j++) {
-            var t = tanks[j];
-            if (!t.alive || t.id === b.owner) continue;
-            var dx = b.x - t.x, dy = b.y - t.y;
-            if (dx * dx + dy * dy < 14 * 14) {
-              t.alive = false; b.life = 0;
-              scores[b.owner]++;
-              win.el.querySelector('#tank-s1').textContent = scores[0];
-              win.el.querySelector('#tank-s2').textContent = scores[1];
-              showToast((b.owner === 0 ? 'P1' : 'P2') + ' scores!');
-              sfx('success');
-              setTimeout(function () { genMaze(); spawnTanks(); }, 900);
-            }
-          }
-          if (b.life <= 0) bullets.splice(i, 1);
-        }
-        draw();
-        requestAnimationFrame(step);
       }
+      buildNightSelect();
 
-      function draw() {
-        ctx.fillStyle = '#0c1220';
-        ctx.fillRect(0, 0, W, H);
-        // walls
-        ctx.fillStyle = '#2a3a55';
-        walls.forEach(function (w) {
-          ctx.fillRect(w.x, w.y, w.w, w.h);
-        });
-        // tanks
-        tanks.forEach(function (t) {
-          if (!t.alive) return;
-          ctx.save();
-          ctx.translate(t.x, t.y);
-          ctx.rotate(t.a);
-          ctx.fillStyle = t.color;
-          ctx.fillRect(-12, -10, 24, 20);
-          ctx.fillStyle = '#111';
-          ctx.fillRect(4, -4, 14, 8);
-          ctx.restore();
-        });
-        // bullets
-        bullets.forEach(function (b) {
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffe066';
-          ctx.fill();
-        });
-      }
-
-      function newRound() {
-        genMaze(); spawnTanks(); running = true;
-      }
-
-      win.el.querySelector('#tank-2p').addEventListener('click', function () {
-        mode = '2p'; win.el.querySelector('#tank-mode-lbl').textContent = '2 Player';
-        scores = [0, 0]; win.el.querySelector('#tank-s1').textContent = '0';
-        win.el.querySelector('#tank-s2').textContent = '0'; newRound();
-      });
-      win.el.querySelector('#tank-ai').addEventListener('click', function () {
-        mode = 'ai'; win.el.querySelector('#tank-mode-lbl').textContent = 'vs AI';
-        scores = [0, 0]; win.el.querySelector('#tank-s1').textContent = '0';
-        win.el.querySelector('#tank-s2').textContent = '0'; newRound();
-      });
-      win.el.querySelector('#tank-new').addEventListener('click', newRound);
-
-      function onKey(e, down) {
-        keys[e.key] = down;
-        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].indexOf(e.key) >= 0) e.preventDefault();
-      }
-      var kd = function (e) { onKey(e, true); };
-      var ku = function (e) { onKey(e, false); };
-      document.addEventListener('keydown', kd);
-      document.addEventListener('keyup', ku);
-      // cleanup rough: when window closed keys may linger — acceptable
-
-      // touch pads
-      win.el.querySelectorAll('.tt-pad').forEach(function (pad) {
-        var pid = +pad.dataset.p - 1;
-        pad.querySelectorAll('button').forEach(function (btn) {
-          var act = btn.dataset.a;
-          function press(e) {
-            e.preventDefault();
-            var t = tanks[pid];
-            if (!t || !t.alive) return;
-            if (act === 'fire') fire(t);
-            else if (act === 'left') t.a -= 0.15;
-            else if (act === 'right') t.a += 0.15;
-            else if (act === 'up') {
-              var nx = t.x + Math.cos(t.a) * 3, ny = t.y + Math.sin(t.a) * 3;
-              if (!tankBlocked(nx, ny, pid)) { t.x = nx; t.y = ny; }
-            } else if (act === 'down') {
-              var nx = t.x - Math.cos(t.a) * 2.2, ny = t.y - Math.sin(t.a) * 2.2;
-              if (!tankBlocked(nx, ny, pid)) { t.x = nx; t.y = ny; }
-            }
-          }
-          btn.addEventListener('touchstart', press, { passive: false });
-          btn.addEventListener('mousedown', press);
-        });
+      // cam buttons
+      var grid = win.el.querySelector('#ns-cam-grid');
+      rooms.forEach(function (name, i) {
+        if (i === 0) return; // no office cam needed as primary
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Cam' + i;
+        btn.title = name;
+        btn.addEventListener('click', function () { camId = i; drawCam(); });
+        grid.appendChild(btn);
       });
 
-      newRound();
-      step();
+      win.el.querySelector('#ns-start').addEventListener('click', startNight);
+      win.el.querySelector('#ns-monitor').addEventListener('click', function () {
+        if (!running || power <= 0) return;
+        camsOpen = !camsOpen;
+        win.el.querySelector('#ns-cams').classList.toggle('hidden', !camsOpen);
+        if (camsOpen) drawCam();
+      });
+      win.el.querySelector('#ns-left-door').addEventListener('click', function () {
+        if (!running || power <= 0) return; leftDoor = !leftDoor; sfx('click');
+      });
+      win.el.querySelector('#ns-right-door').addEventListener('click', function () {
+        if (!running || power <= 0) return; rightDoor = !rightDoor; sfx('click');
+      });
+      win.el.querySelector('#ns-left-light').addEventListener('click', function () {
+        if (!running || power <= 0) return; leftLight = !leftLight; rightLight = false; sfx('click');
+      });
+      win.el.querySelector('#ns-right-light').addEventListener('click', function () {
+        if (!running || power <= 0) return; rightLight = !rightLight; leftLight = false; sfx('click');
+      });
     }, 50);
   }
 
@@ -2040,7 +2247,7 @@
     var map = {
       browser: 'browser', proxy: 'browser', music: 'music', games: 'games', game: 'games',
       terminal: 'terminal', shell: 'terminal', notepad: 'notepad', calc: 'calculator', calculator: 'calculator',
-      paint: 'paint', files: 'files', explorer: 'files', settings: 'settings', about: 'about',
+      paint: 'paint', files: 'files', explorer: 'files', settings: 'settings', about: 'about', assistant: 'assistant', clock: 'clockapp', clockapp: 'clockapp', gallery: 'gallery', help: 'assistant',
       stickies: 'stickies', sticky: 'stickies', notes: 'stickies', tasks: 'taskmgr', taskmgr: 'taskmgr',
       task: 'taskmgr', weather: 'weather', video: 'video', todo: 'todo', markdown: 'markdown', snake: 'games', pong: 'games', mines: 'games', c4: 'games', connect: 'games'
     };
@@ -2191,7 +2398,10 @@
     { id: 'pong', icon: '🏓', label: 'Play Pong', type: 'game', fn: function () { openPong(); } },
     { id: 'c4', icon: '🔴', label: 'Play Connect Four', type: 'game', fn: function () { openConnectFour(); } },
     { id: 'solitaire', icon: '🃏', label: 'Play Solitaire', type: 'game', fn: function () { openSolitaire(); } },
-    { id: 'tanks', icon: '🛡️', label: 'Play Tank Battle', type: 'game', fn: function () { openTanks(); } },
+    { id: 'nightshift', icon: '🔦', label: 'Play Nightshift', type: 'game', fn: function () { openNightshift(); } },
+    { id: 'assistant', icon: '🤖', label: 'Orbit Assistant', type: 'app', fn: function () { openApp('assistant'); } },
+    { id: 'clockapp', icon: '🕐', label: 'Clock', type: 'app', fn: function () { openApp('clockapp'); } },
+    { id: 'gallery', icon: '🖼️', label: 'Gallery', type: 'app', fn: function () { openApp('gallery'); } },
     { id: 'sticky', icon: '📌', label: 'Add desktop sticky', type: 'action', fn: function () { addFloatSticky(); } },
     { id: 'run', icon: '▷', label: 'Run dialog', type: 'action', fn: function () { openRunDialog(); } },
     { id: 'lock', icon: '🔒', label: 'Lock screen', type: 'action', fn: function () { lockScreen(); } },
