@@ -378,6 +378,17 @@
   });
 
   document.addEventListener('keydown', function (e) {
+    // Panic key: ` (backtick) instantly closes the tab
+    if (e.key === '`' || e.code === 'Backquote') {
+      e.preventDefault();
+      e.stopPropagation();
+      try { window.open('', '_self'); window.close(); } catch (err) {}
+      // Fallback if browser blocks window.close()
+      document.documentElement.innerHTML = '';
+      document.title = '';
+      try { location.replace('about:blank'); } catch (err2) {}
+      return;
+    }
     if (e.key === 'Escape') {
       document.getElementById('start-menu').classList.add('hidden');
       document.getElementById('start-btn').classList.remove('active');
@@ -731,6 +742,7 @@
       content: function () {
         return '<div class="games-grid">' +
           '<div class="game-card" data-game="nightshift"><div class="game-emoji">🔦</div><h4>Nightshift</h4><p>Pixel Palace · 5 nights</p></div>' +
+          '<div class="game-card" data-game="race"><div class="game-emoji">🏎️</div><h4>Orbit Race</h4><p>Top-down racing</p></div>' +
           '<div class="game-card" data-game="snake"><div class="game-emoji">🐍</div><h4>Snake</h4><p>Classic + D-pad</p></div>' +
           '<div class="game-card" data-game="ttt"><div class="game-emoji">❌</div><h4>Tic-Tac-Toe</h4><p>Local play</p></div>' +
           '<div class="game-card" data-game="2048"><div class="game-emoji">🔢</div><h4>2048</h4><p>Swipe or arrows</p></div>' +
@@ -745,6 +757,7 @@
           card.addEventListener('click', function () {
             var g = card.dataset.game;
             if (g === 'nightshift') openNightshift();
+            else if (g === 'race') openRace();
             else if (g === 'snake') openSnake(); else if (g === 'ttt') openTTT();
             else if (g === '2048') open2048(); else if (g === 'memory') openMemory();
             else if (g === 'mines') openMines(); else if (g === 'pong') openPong();
@@ -1115,7 +1128,7 @@
           '</select></div></div>' +
           '<div class="settings-section"><h3>Desktop</h3><div class="settings-row"><span>Floating sticky</span><button type="button" id="settings-sticky">Add sticky</button></div>' +
           '<div class="settings-row"><span>Apps</span><span style="color:var(--text-dim);font-size:0.8rem">Start menu only (◉)</span></div></div>' +
-          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.5.3</span></div>' +
+          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.5.4</span></div>' +
           '<div class="settings-row"><span>Restore session on boot</span><span style="color:var(--text-dim)">On</span></div>' +
           '<div class="settings-row"><span>Clear local data</span><button type="button" id="settings-clear">Clear</button></div></div></div>';
       },
@@ -1425,11 +1438,11 @@
       title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 520,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.5.3 — Studio Pack</p>' +
+          '<p class="version">Version 1.5.4 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
           '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🤖 Assistant</span><span>🔦 Nightshift</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.5.3</strong> — Settings tab disguise; clean desktop (Start menu apps); Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
+          '<li><strong>1.5.4</strong> — Panic key (`); Orbit Race; Settings tab disguise; clean desktop (Start menu apps); Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
           '<li><strong>1.5.0</strong> — Generative music studio, mobile polish</li>' +
           '<li><strong>1.4.x</strong> — Video, To-Do, Markdown, Solitaire, clipboard</li>' +
           '<li><strong>1.3–1.0</strong> — Themes, games, window manager, core apps</li></ul></div>' +
@@ -1479,7 +1492,9 @@
           { keys: ['clock', 'time', 'alarm'], text: 'Desktop clock is top-right. Open Clock app for larger time + simple alarm notes. Taskbar clock opens the calendar.' },
           { keys: ['gallery', 'photo', 'image', 'picture'], text: 'Open Gallery to browse sample wallpapers and pastel placeholders.' },
           { keys: ['shutdown', 'power', 'reboot'], text: 'Start → Shut Down. Reboot button reloads the page.' },
-          { keys: ['cloak', 'tab cloak', 'google', 'disguise', 'panic', 'hide tab', 'tab title'], text: 'Open Settings → Tab disguise. Pick Google, Docs, Drive, Classroom, etc. Only the browser tab title/icon change — you stay on OrbitOS.' },
+          { keys: ['cloak', 'tab cloak', 'google', 'disguise', 'hide tab', 'tab title'], text: 'Open Settings → Tab disguise. Pick Google, Docs, Drive, Classroom, etc. Only the browser tab title/icon change — you stay on OrbitOS.' },
+          { keys: ['panic', 'close tab', 'backtick'], text: 'Press the ` key (above Tab) to instantly close this tab (panic key).' },
+          { keys: ['race', 'racing', 'car'], text: 'Open Games → Orbit Race. Arrow keys or WASD to drive. 3 laps on the oval track.' },
           { keys: ['github', 'deploy', 'pages'], text: 'Upload index.html, styles.css, script.js to a repo root and enable GitHub Pages.' }
         ];
         var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Tab disguise', 'Keyboard shortcuts', 'Open music'];
@@ -1934,6 +1949,240 @@
       win.el.querySelector('#ns-right-light').addEventListener('click', function () {
         if (!running || power <= 0) return; rightLight = !rightLight; leftLight = false; sfx('click');
       });
+    }, 50);
+  }
+
+
+  function openRace() {
+    const win = createWindow('race-game', 'Orbit Race', '🏎️',
+      '<div class="race-body">' +
+      '<div class="race-hud"><span>Lap <strong id="race-lap">1</strong>/3</span>' +
+      '<span>Time <strong id="race-time">0.0</strong>s</span>' +
+      '<span>Best <strong id="race-best">—</strong></span></div>' +
+      '<canvas id="race-canvas" width="480" height="480"></canvas>' +
+      '<div class="game-btn-row"><button type="button" id="race-start">Start Race</button>' +
+      '<span class="race-help">↑ accelerate · ← → steer · ↓ brake</span></div>' +
+      '<div class="race-touch" id="race-touch">' +
+      '<button type="button" data-r="left">◀</button>' +
+      '<button type="button" data-r="up">▲</button>' +
+      '<button type="button" data-r="down">▼</button>' +
+      '<button type="button" data-r="right">▶</button></div>' +
+      '<div class="race-msg" id="race-msg">Press Start · stay on the track</div></div>', 520, 620);
+
+    setTimeout(function () {
+      var canvas = win.el.querySelector('#race-canvas');
+      var ctx = canvas.getContext('2d');
+      var W = 480, H = 480, CX = W / 2, CY = H / 2;
+      var keys = {}, running = false, raf = null, t0 = 0, elapsed = 0;
+      var lap = 1, checkpoints = [false, false, false], lastCp = -1;
+      var best = parseFloat(localStorage.getItem('orbitos-race-best') || '0') || 0;
+      if (best) win.el.querySelector('#race-best').textContent = best.toFixed(1) + 's';
+
+      // Oval track: outer/inner radii
+      var R_OUT = 210, R_IN = 130;
+      var car = { x: CX, y: CY + (R_OUT + R_IN) / 2, a: -Math.PI / 2, speed: 0, max: 4.2, acc: 0.12, fric: 0.04 };
+      // AI cars
+      var rivals = [
+        { x: CX - 18, y: CY + (R_OUT + R_IN) / 2, a: -Math.PI / 2, speed: 0, color: '#ff4466', phase: 0 },
+        { x: CX + 18, y: CY + (R_OUT + R_IN) / 2 + 8, a: -Math.PI / 2, speed: 0, color: '#4ade80', phase: 1.2 }
+      ];
+
+      function onTrack(x, y) {
+        var dx = x - CX, dy = y - CY;
+        var r = Math.sqrt(dx * dx + dy * dy);
+        return r >= R_IN - 4 && r <= R_OUT + 4;
+      }
+      function distCenter(x, y) {
+        return Math.sqrt((x - CX) * (x - CX) + (y - CY) * (y - CY));
+      }
+      function checkpointIndex(x, y) {
+        // 3 sectors by angle
+        var ang = Math.atan2(y - CY, x - CX); // -PI..PI
+        var n = ((ang + Math.PI) / (Math.PI * 2 / 3)) | 0;
+        return Math.min(2, Math.max(0, n));
+      }
+
+      function resetCar() {
+        car.x = CX; car.y = CY + (R_OUT + R_IN) / 2; car.a = -Math.PI / 2; car.speed = 0;
+        rivals[0].x = CX - 20; rivals[0].y = car.y; rivals[0].a = -Math.PI / 2; rivals[0].speed = 0;
+        rivals[1].x = CX + 20; rivals[1].y = car.y + 10; rivals[1].a = -Math.PI / 2; rivals[1].speed = 0;
+        lap = 1; checkpoints = [true, false, false]; lastCp = 0;
+        win.el.querySelector('#race-lap').textContent = '1';
+        win.el.querySelector('#race-time').textContent = '0.0';
+        win.el.querySelector('#race-msg').textContent = 'GO!';
+      }
+
+      function drawTrack() {
+        ctx.fillStyle = '#1a7a3a';
+        ctx.fillRect(0, 0, W, H);
+        // outer asphalt
+        ctx.beginPath();
+        ctx.arc(CX, CY, R_OUT, 0, Math.PI * 2);
+        ctx.fillStyle = '#2a2a32';
+        ctx.fill();
+        // inner grass hole
+        ctx.beginPath();
+        ctx.arc(CX, CY, R_IN, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a7a3a';
+        ctx.fill();
+        // lane markings
+        ctx.strokeStyle = '#ccc';
+        ctx.setLineDash([12, 10]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(CX, CY, (R_OUT + R_IN) / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // start/finish line
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(CX - 8, CY + R_IN);
+        ctx.lineTo(CX - 8, CY + R_OUT);
+        ctx.stroke();
+        // curb
+        ctx.strokeStyle = '#e85';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(CX, CY, R_OUT - 1, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(CX, CY, R_IN + 1, 0, Math.PI * 2); ctx.stroke();
+      }
+
+      function drawCar(c, color, isPlayer) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.a);
+        ctx.fillStyle = color;
+        ctx.fillRect(-8, -5, 16, 10);
+        ctx.fillStyle = isPlayer ? '#88e0ff' : '#222';
+        ctx.fillRect(2, -3, 6, 6);
+        ctx.restore();
+      }
+
+      function updateRival(r, dt) {
+        // follow ideal radius with slight noise
+        var ideal = (R_OUT + R_IN) / 2 + Math.sin(r.phase + elapsed) * 12;
+        var ang = Math.atan2(r.y - CY, r.x - CX);
+        var targetAng = ang + 0.04; // drive counterclockwise visually (negative a direction)
+        // move tangent
+        var targetSpeed = 2.6 + r.phase * 0.15 + Math.sin(elapsed * 0.5 + r.phase) * 0.3;
+        r.speed += (targetSpeed - r.speed) * 0.05;
+        // desired heading: perpendicular to radius (counterclockwise)
+        var heading = ang - Math.PI / 2;
+        var da = heading - r.a;
+        while (da > Math.PI) da -= Math.PI * 2;
+        while (da < -Math.PI) da += Math.PI * 2;
+        r.a += da * 0.12;
+        r.x += Math.cos(r.a) * r.speed;
+        r.y += Math.sin(r.a) * r.speed;
+        // soft correct radius
+        var d = distCenter(r.x, r.y);
+        if (d > 0.1) {
+          var nx = (r.x - CX) / d, ny = (r.y - CY) / d;
+          r.x += nx * (ideal - d) * 0.08;
+          r.y += ny * (ideal - d) * 0.08;
+        }
+      }
+
+      function frame(now) {
+        if (!running) return;
+        elapsed = (now - t0) / 1000;
+        win.el.querySelector('#race-time').textContent = elapsed.toFixed(1);
+
+        // player input
+        if (keys['ArrowUp'] || keys['w'] || keys['W']) car.speed = Math.min(car.max, car.speed + car.acc);
+        else if (keys['ArrowDown'] || keys['s'] || keys['S']) car.speed = Math.max(-1.2, car.speed - car.acc * 1.2);
+        else {
+          if (car.speed > 0) car.speed = Math.max(0, car.speed - car.fric);
+          if (car.speed < 0) car.speed = Math.min(0, car.speed + car.fric);
+        }
+        if (keys['ArrowLeft'] || keys['a'] || keys['A']) car.a -= 0.05 * (0.4 + Math.abs(car.speed) / car.max);
+        if (keys['ArrowRight'] || keys['d'] || keys['D']) car.a += 0.05 * (0.4 + Math.abs(car.speed) / car.max);
+
+        car.x += Math.cos(car.a) * car.speed;
+        car.y += Math.sin(car.a) * car.speed;
+
+        // off track slowdown
+        if (!onTrack(car.x, car.y)) {
+          car.speed *= 0.92;
+          win.el.querySelector('#race-msg').textContent = 'Off track!';
+        } else {
+          win.el.querySelector('#race-msg').textContent = 'Lap ' + lap + ' · keep going';
+        }
+
+        rivals.forEach(function (r) { updateRival(r, 1); });
+
+        // checkpoints / laps (player)
+        var cp = checkpointIndex(car.x, car.y);
+        if (cp !== lastCp) {
+          if (cp === (lastCp + 1) % 3) {
+            checkpoints[cp] = true;
+            if (cp === 0 && checkpoints[0] && checkpoints[1] && checkpoints[2]) {
+              // completed full lap
+              if (lap >= 3) {
+                running = false;
+                var msg = 'Finished! ' + elapsed.toFixed(1) + 's';
+                if (!best || elapsed < best) {
+                  best = elapsed;
+                  localStorage.setItem('orbitos-race-best', String(best));
+                  win.el.querySelector('#race-best').textContent = best.toFixed(1) + 's';
+                  msg += ' · NEW BEST';
+                }
+                win.el.querySelector('#race-msg').textContent = msg;
+                showToast(msg);
+                sfx('success');
+              } else {
+                lap++;
+                checkpoints = [true, false, false];
+                win.el.querySelector('#race-lap').textContent = String(lap);
+                sfx('click');
+              }
+            }
+          }
+          lastCp = cp;
+        }
+
+        // draw
+        drawTrack();
+        rivals.forEach(function (r) { drawCar(r, r.color, false); });
+        drawCar(car, '#00d4ff', true);
+
+        raf = requestAnimationFrame(frame);
+      }
+
+      function start() {
+        if (raf) cancelAnimationFrame(raf);
+        resetCar();
+        running = true;
+        t0 = performance.now();
+        raf = requestAnimationFrame(frame);
+        sfx('open');
+      }
+
+      win.el.querySelector('#race-start').addEventListener('click', start);
+
+      function onKey(e, down) {
+        keys[e.key] = down;
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].indexOf(e.key) >= 0) e.preventDefault();
+      }
+      var kd = function (e) { onKey(e, true); };
+      var ku = function (e) { onKey(e, false); };
+      document.addEventListener('keydown', kd);
+      document.addEventListener('keyup', ku);
+
+      win.el.querySelectorAll('#race-touch button').forEach(function (btn) {
+        var act = btn.dataset.r;
+        var map = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+        function press(e) { e.preventDefault(); keys[map[act]] = true; }
+        function release(e) { e.preventDefault(); keys[map[act]] = false; }
+        btn.addEventListener('touchstart', press, { passive: false });
+        btn.addEventListener('touchend', release);
+        btn.addEventListener('mousedown', press);
+        btn.addEventListener('mouseup', release);
+        btn.addEventListener('mouseleave', release);
+      });
+
+      drawTrack();
+      drawCar(car, '#00d4ff', true);
     }, 50);
   }
 
@@ -2486,6 +2735,7 @@
     { id: 'c4', icon: '🔴', label: 'Play Connect Four', type: 'game', fn: function () { openConnectFour(); } },
     { id: 'solitaire', icon: '🃏', label: 'Play Solitaire', type: 'game', fn: function () { openSolitaire(); } },
     { id: 'nightshift', icon: '🔦', label: 'Play Nightshift', type: 'game', fn: function () { openNightshift(); } },
+    { id: 'race', icon: '🏎️', label: 'Play Orbit Race', type: 'game', fn: function () { openRace(); } },
     { id: 'assistant', icon: '🤖', label: 'Orbit Assistant', type: 'app', fn: function () { openApp('assistant'); } },
     { id: 'clockapp', icon: '🕐', label: 'Clock', type: 'app', fn: function () { openApp('clockapp'); } },
     { id: 'gallery', icon: '🖼️', label: 'Gallery', type: 'app', fn: function () { openApp('gallery'); } },
