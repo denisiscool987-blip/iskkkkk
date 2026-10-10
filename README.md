@@ -1,39 +1,27 @@
 # OrbitOS
 
-Browser desktop OS for GitHub Pages. **v1.5.2 Studio Pack.**  
+Browser desktop OS for GitHub Pages. **v1.5.3 Studio Pack.**  
 No install · no backend · localStorage only.
 
-## Apps
-Browser · Music (generative) · Games · Terminal · Notepad · Calculator · Paint · Files · Stickies · Task Manager · Weather · Video · To-Do · Markdown · **Orbit Assistant** · **Clock** · **Gallery** · Settings · About
+## Apps (Start menu only)
+Browser · Music · Games · Terminal · Notepad · Calculator · Paint · Files · Stickies · Task Manager · Weather · Video · To-Do · Markdown · Orbit Assistant · Clock · Gallery · Settings · About
+
+Open apps from the **◉ Start** button — the desktop has no icons.
 
 ## Games
-**Nightshift: Pixel Palace** (5 nights, cameras, doors, power) · Snake · Tic-Tac-Toe · 2048 · Memory · Minesweeper · Pong · Connect Four · Solitaire
+**Nightshift: Pixel Palace** · Snake · Tic-Tac-Toe · 2048 · Memory · Minesweeper · Pong · Connect Four · Solitaire
 
-## Nightshift (original horror shift game)
-You are the night guard at **Pixel Palace**. Animatronics **Byte**, **Circuit**, **Glitch**, and **Static** leave the stage after midnight.  
-Check cameras · close doors · use hall lights · manage power · survive 12 AM → 6 AM across 5 nights.
-
-## Orbit Assistant
-Local keyword helper — ask about wallpaper, shortcuts, Nightshift, music, deploy, etc.
-
-## Tab cloak
-Press **`** (backtick, key above Tab) to disguise the tab as **Google** (title, favicon, full fake homepage). Press **`** again or **Esc** to return. Also: right-click desktop → Tab cloak, or Ctrl+K → Tab cloak.
+## Tab disguise (Settings)
+**Settings → Tab disguise** changes only the **browser tab title and favicon** (what appears in history / tab switcher).  
+You keep using OrbitOS. Options: Off, Google, Docs, Drive, Classroom, Canvas, Wikipedia, GitHub, YouTube, New Tab.
 
 ## System
 Ctrl+K palette · Ctrl+R Run · Ctrl+L lock · Ctrl+Shift+V clipboard  
-Themes · custom wallpaper · session restore · mobile layout
+Themes · wallpaper · session restore · mobile layout
 
-## Deploy (GitHub Pages)
-Upload to **repo root**:
-
-| File | Purpose |
-|------|---------|
-| `index.html` | Shell |
-| `styles.css` | Styles |
-| `script.js` | Logic / apps / games |
-| `README.md` | Optional docs |
-
-Settings → Pages → Deploy from branch → `/ (root)`.
+## Deploy
+Upload to repo **root**: `index.html` · `styles.css` · `script.js`  
+(optional `README.md`)
 
 ## License
 MIT

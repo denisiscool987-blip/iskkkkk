@@ -18,10 +18,47 @@
   let calMonth = new Date();
   let musicStopFn = null;
   let audioCtx = null;
-  let tabCloaked = false;
   const ORBIT_TITLE = 'OrbitOS — Web Desktop';
   const ORBIT_FAVICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2300d4ff'/><circle cx='50' cy='50' r='25' fill='%230a0a1a'/><circle cx='50' cy='50' r='10' fill='%2300d4ff'/></svg>";
-  const GOOGLE_FAVICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%234285F4' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/><path fill='%2334A853' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/><path fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/><path fill='%23EA4335' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/></svg>";
+  const TAB_DISGUISES = {
+    off: { title: ORBIT_TITLE, favicon: null },
+    google: {
+      title: 'Google',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%234285F4' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/><path fill='%2334A853' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/><path fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/><path fill='%23EA4335' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/></svg>"
+    },
+    docs: {
+      title: 'Untitled document - Google Docs',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%234285F4' d='M8 4h22l10 10v30H8z'/><path fill='%23A1C2FA' d='M30 4v10h10'/><path fill='%23fff' d='M14 22h20v3H14zm0 6h20v3H14zm0 6h14v3H14z'/></svg>"
+    },
+    drive: {
+      title: 'My Drive - Google Drive',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%231A73E8' d='M8 36l7-12h18l7 12z'/><path fill='%23EA4335' d='M15 12l7 12H8z'/><path fill='%23FBBC04' d='M33 12l7 12H26z'/><path fill='%2334A853' d='M15 12h18l-7 12z'/></svg>"
+    },
+    classroom: {
+      title: 'Classes',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='20' fill='%23205B3B'/><text x='24' y='30' text-anchor='middle' fill='white' font-size='18' font-family='Arial'>C</text></svg>"
+    },
+    wikipedia: {
+      title: 'Wikipedia',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='20' fill='%23000'/><text x='24' y='31' text-anchor='middle' fill='white' font-size='20' font-family='serif'>W</text></svg>"
+    },
+    github: {
+      title: 'GitHub',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='20' fill='%23222222'/><text x='24' y='30' text-anchor='middle' fill='white' font-size='16' font-family='Arial'>GH</text></svg>"
+    },
+    canvas: {
+      title: 'Dashboard',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='8' fill='%23E23D2F'/><text x='24' y='30' text-anchor='middle' fill='white' font-size='14' font-family='Arial'>In</text></svg>"
+    },
+    youtube: {
+      title: 'YouTube',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='10' fill='%23FF0000'/><path fill='white' d='M19 14v20l16-10z'/></svg>"
+    },
+    blank: {
+      title: 'New Tab',
+      favicon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23ecf0f1'/></svg>"
+    }
+  };
 
   let idleTimer = null;
   let ssAnim = null;
@@ -152,44 +189,15 @@
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.href = href;
+    link.href = href || ORBIT_FAVICON;
   }
-  function enableTabCloak() {
-    tabCloaked = true;
-    document.title = 'Google';
-    setFavicon(GOOGLE_FAVICON);
-    var el = document.getElementById('tab-cloak');
-    if (el) {
-      el.classList.remove('hidden');
-      el.setAttribute('aria-hidden', 'false');
-      // match system preference-ish: dark cloak by default (Google dark)
-      el.classList.remove('light');
-      var q = document.getElementById('g-q');
-      if (q) setTimeout(function () { q.focus(); }, 30);
-    }
-    // hide real UI from view / screen share glance
-    var desk = document.getElementById('desktop');
-    var boot = document.getElementById('boot-screen');
-    if (desk) desk.style.visibility = 'hidden';
-    if (boot) boot.style.visibility = 'hidden';
-  }
-  function disableTabCloak() {
-    tabCloaked = false;
-    document.title = ORBIT_TITLE;
-    setFavicon(ORBIT_FAVICON);
-    var el = document.getElementById('tab-cloak');
-    if (el) {
-      el.classList.add('hidden');
-      el.setAttribute('aria-hidden', 'true');
-    }
-    var desk = document.getElementById('desktop');
-    var boot = document.getElementById('boot-screen');
-    if (desk) desk.style.visibility = '';
-    if (boot) boot.style.visibility = '';
-  }
-  function toggleTabCloak() {
-    if (tabCloaked) disableTabCloak();
-    else enableTabCloak();
+  function applyTabDisguise(id) {
+    id = id || store.tabDisguise || 'off';
+    var d = TAB_DISGUISES[id] || TAB_DISGUISES.off;
+    document.title = d.title;
+    setFavicon(d.favicon || ORBIT_FAVICON);
+    saveStore({ tabDisguise: id });
+    store = loadStore();
   }
 
   function boot() {
@@ -218,7 +226,7 @@
           setTimeout(function () { document.getElementById('boot-screen').classList.add('hidden'); }, 600);
           updateClock(); setInterval(updateClock, 1000);
           updateDesktopClock(); setInterval(updateDesktopClock, 1000);
-          applyTheme(currentTheme); applyWallpaper(); updateVolumeUI();
+          applyTheme(currentTheme); applyWallpaper(); updateVolumeUI(); applyTabDisguise(store.tabDisguise || 'off');
           showToast('Welcome to OrbitOS');
           if (!store.tipsSeen) setTimeout(function () { document.getElementById('tips-overlay').classList.remove('hidden'); }, 500);
           setTimeout(restoreSession, 800);
@@ -370,20 +378,6 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    // Tab cloak: key above Tab (` / Backquote). Press again to restore.
-    if (e.key === '`' || e.code === 'Backquote') {
-      // Allow exit even from inputs; only block enter-cloak while typing in fields
-      if (tabCloaked || !e.target.matches('input, textarea, [contenteditable]')) {
-        e.preventDefault();
-        toggleTabCloak();
-        return;
-      }
-    }
-    if (tabCloaked) {
-      // While cloaked, ignore OS shortcuts except cloak toggle (already handled)
-      if (e.key === 'Escape') { e.preventDefault(); disableTabCloak(); return; }
-      return;
-    }
     if (e.key === 'Escape') {
       document.getElementById('start-menu').classList.add('hidden');
       document.getElementById('start-btn').classList.remove('active');
@@ -1104,8 +1098,24 @@
           '<div class="settings-section"><h3>Sound</h3><div class="settings-row"><span>Mute UI & music</span><button type="button" id="settings-mute">Toggle Mute</button></div>' +
           '<div class="settings-row vol-row"><span>Volume</span><input type="range" id="settings-vol" min="0" max="100" value="70"></div></div>' +
           '<div class="settings-section"><h3>Accessibility</h3><div class="settings-row"><span>Reduced motion</span><button type="button" id="settings-motion">Toggle</button></div></div>' +
-          '<div class="settings-section"><h3>Desktop</h3><div class="settings-row"><span>Floating sticky</span><button type="button" id="settings-sticky">Add sticky</button></div></div>' +
-          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.4.1</span></div>' +
+          '<div class="settings-section"><h3>Tab disguise</h3>' +
+          '<p style="font-size:0.78rem;color:var(--text-dim);margin:0 0 10px;line-height:1.4">Changes only the browser tab title &amp; icon (history/switcher). You stay on OrbitOS.</p>' +
+          '<div class="settings-row"><span>Disguise as</span>' +
+          '<select id="tab-disguise-select" style="flex:1;max-width:220px;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.35);color:var(--text)">' +
+          '<option value="off">Off — OrbitOS</option>' +
+          '<option value="google">Google</option>' +
+          '<option value="docs">Google Docs</option>' +
+          '<option value="drive">Google Drive</option>' +
+          '<option value="classroom">Google Classroom</option>' +
+          '<option value="canvas">Canvas / School</option>' +
+          '<option value="wikipedia">Wikipedia</option>' +
+          '<option value="github">GitHub</option>' +
+          '<option value="youtube">YouTube</option>' +
+          '<option value="blank">New Tab</option>' +
+          '</select></div></div>' +
+          '<div class="settings-section"><h3>Desktop</h3><div class="settings-row"><span>Floating sticky</span><button type="button" id="settings-sticky">Add sticky</button></div>' +
+          '<div class="settings-row"><span>Apps</span><span style="color:var(--text-dim);font-size:0.8rem">Start menu only (◉)</span></div></div>' +
+          '<div class="settings-section"><h3>System</h3><div class="settings-row"><span>Version</span><span style="color:var(--text-dim)">OrbitOS 1.5.3</span></div>' +
           '<div class="settings-row"><span>Restore session on boot</span><span style="color:var(--text-dim)">On</span></div>' +
           '<div class="settings-row"><span>Clear local data</span><button type="button" id="settings-clear">Clear</button></div></div></div>';
       },
@@ -1157,6 +1167,15 @@
         });
         var stickyBtn = win.el.querySelector('#settings-sticky');
         if (stickyBtn) stickyBtn.addEventListener('click', function () { addFloatSticky(); sfx('open'); });
+        var disguiseSel = win.el.querySelector('#tab-disguise-select');
+        if (disguiseSel) {
+          disguiseSel.value = store.tabDisguise || 'off';
+          disguiseSel.addEventListener('change', function () {
+            applyTabDisguise(disguiseSel.value);
+            showToast(disguiseSel.value === 'off' ? 'Tab disguise off' : 'Tab looks like ' + disguiseSel.options[disguiseSel.selectedIndex].text);
+            sfx('success');
+          });
+        }
         win.el.querySelector('#settings-clear').addEventListener('click', function () {
           if (confirm('Clear all OrbitOS saved data?')) {
             localStorage.removeItem(STORE_KEY); localStorage.removeItem('orbitos-snake-best'); store = {}; showToast('Local data cleared');
@@ -1406,11 +1425,11 @@
       title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 520,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.5.2 — Studio Pack</p>' +
+          '<p class="version">Version 1.5.3 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
           '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🤖 Assistant</span><span>🔦 Nightshift</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.5.2</strong> — Tab cloak (Google disguise); Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
+          '<li><strong>1.5.3</strong> — Settings tab disguise; clean desktop (Start menu apps); Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
           '<li><strong>1.5.0</strong> — Generative music studio, mobile polish</li>' +
           '<li><strong>1.4.x</strong> — Video, To-Do, Markdown, Solitaire, clipboard</li>' +
           '<li><strong>1.3–1.0</strong> — Themes, games, window manager, core apps</li></ul></div>' +
@@ -1460,10 +1479,10 @@
           { keys: ['clock', 'time', 'alarm'], text: 'Desktop clock is top-right. Open Clock app for larger time + simple alarm notes. Taskbar clock opens the calendar.' },
           { keys: ['gallery', 'photo', 'image', 'picture'], text: 'Open Gallery to browse sample wallpapers and pastel placeholders.' },
           { keys: ['shutdown', 'power', 'reboot'], text: 'Start → Shut Down. Reboot button reloads the page.' },
-          { keys: ['cloak', 'tab cloak', 'google', 'disguise', 'panic', 'hide tab'], text: 'Press the ` key (above Tab) to disguise this tab as Google. Press ` again or Esc to return. Right-click desktop → Tab cloak.' },
+          { keys: ['cloak', 'tab cloak', 'google', 'disguise', 'panic', 'hide tab', 'tab title'], text: 'Open Settings → Tab disguise. Pick Google, Docs, Drive, Classroom, etc. Only the browser tab title/icon change — you stay on OrbitOS.' },
           { keys: ['github', 'deploy', 'pages'], text: 'Upload index.html, styles.css, script.js to a repo root and enable GitHub Pages.' }
         ];
-        var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Tab cloak', 'Keyboard shortcuts', 'Open music'];
+        var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Tab disguise', 'Keyboard shortcuts', 'Open music'];
         hints.innerHTML = starters.map(function (s) {
           return '<button type="button" class="assist-chip">' + s + '</button>';
         }).join('');
@@ -2475,8 +2494,7 @@
     { id: 'lock', icon: '🔒', label: 'Lock screen', type: 'action', fn: function () { lockScreen(); } },
     { id: 'fullscreen', icon: '⛶', label: 'Toggle fullscreen', type: 'action', fn: function () { toggleFullscreen(); } },
     { id: 'screensaver', icon: '✨', label: 'Start screensaver', type: 'action', fn: function () { startScreensaver(); } },
-    { id: 'mute', icon: '🔇', label: 'Toggle mute', type: 'action', fn: function () { toggleMute(); } },
-    { id: 'cloak', icon: '🕵️', label: 'Tab cloak (Google)', type: 'action', fn: function () { toggleTabCloak(); } }
+    { id: 'mute', icon: '🔇', label: 'Toggle mute', type: 'action', fn: function () { toggleMute(); } }
   ];
 
   function openCommandPalette() {
@@ -2832,7 +2850,6 @@
         else if (a === 'wallpaper') { wallpaperIndex = (wallpaperIndex + 1) % 5; applyWallpaper(); showToast('Wallpaper changed'); }
         else if (a === 'tips') document.getElementById('tips-overlay').classList.remove('hidden');
         else if (a === 'about') openApp('about');
-        else if (a === 'cloak') toggleTabCloak();
         ctx.classList.add('hidden'); sfx('click');
       });
     });
@@ -3014,27 +3031,6 @@
       if (panel && !panel.contains(e.target) && e.target.id !== 'clip-icon') panel.classList.add('hidden');
     });
   }
-
-
-    // Tab cloak search buttons → real Google in new tab (looks legit)
-    var cloak = document.getElementById('tab-cloak');
-    if (cloak) {
-      cloak.querySelectorAll('.g-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var q = (document.getElementById('g-q') || {}).value || '';
-          var url = q.trim() ? ('https://www.google.com/search?q=' + encodeURIComponent(q.trim())) : 'https://www.google.com/';
-          window.open(url, '_blank', 'noopener');
-        });
-      });
-      var gq = document.getElementById('g-q');
-      if (gq) gq.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          var q = gq.value.trim();
-          window.open(q ? 'https://www.google.com/search?q=' + encodeURIComponent(q) : 'https://www.google.com/', '_blank', 'noopener');
-        }
-      });
-    }
 
   boot();
   setupUI();
