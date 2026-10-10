@@ -18,6 +18,11 @@
   let calMonth = new Date();
   let musicStopFn = null;
   let audioCtx = null;
+  let tabCloaked = false;
+  const ORBIT_TITLE = 'OrbitOS — Web Desktop';
+  const ORBIT_FAVICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2300d4ff'/><circle cx='50' cy='50' r='25' fill='%230a0a1a'/><circle cx='50' cy='50' r='10' fill='%2300d4ff'/></svg>";
+  const GOOGLE_FAVICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%234285F4' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/><path fill='%2334A853' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/><path fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/><path fill='%23EA4335' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/></svg>";
+
   let idleTimer = null;
   let ssAnim = null;
   const IDLE_MS = 90000;
@@ -137,6 +142,54 @@
     if (muted && musicStopFn) musicStopFn();
     showToast(muted ? 'Muted' : 'Unmuted');
     if (!muted) sfx('click');
+  }
+
+
+  function setFavicon(href) {
+    var link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = href;
+  }
+  function enableTabCloak() {
+    tabCloaked = true;
+    document.title = 'Google';
+    setFavicon(GOOGLE_FAVICON);
+    var el = document.getElementById('tab-cloak');
+    if (el) {
+      el.classList.remove('hidden');
+      el.setAttribute('aria-hidden', 'false');
+      // match system preference-ish: dark cloak by default (Google dark)
+      el.classList.remove('light');
+      var q = document.getElementById('g-q');
+      if (q) setTimeout(function () { q.focus(); }, 30);
+    }
+    // hide real UI from view / screen share glance
+    var desk = document.getElementById('desktop');
+    var boot = document.getElementById('boot-screen');
+    if (desk) desk.style.visibility = 'hidden';
+    if (boot) boot.style.visibility = 'hidden';
+  }
+  function disableTabCloak() {
+    tabCloaked = false;
+    document.title = ORBIT_TITLE;
+    setFavicon(ORBIT_FAVICON);
+    var el = document.getElementById('tab-cloak');
+    if (el) {
+      el.classList.add('hidden');
+      el.setAttribute('aria-hidden', 'true');
+    }
+    var desk = document.getElementById('desktop');
+    var boot = document.getElementById('boot-screen');
+    if (desk) desk.style.visibility = '';
+    if (boot) boot.style.visibility = '';
+  }
+  function toggleTabCloak() {
+    if (tabCloaked) disableTabCloak();
+    else enableTabCloak();
   }
 
   function boot() {
@@ -317,6 +370,20 @@
   });
 
   document.addEventListener('keydown', function (e) {
+    // Tab cloak: key above Tab (` / Backquote). Press again to restore.
+    if (e.key === '`' || e.code === 'Backquote') {
+      // Allow exit even from inputs; only block enter-cloak while typing in fields
+      if (tabCloaked || !e.target.matches('input, textarea, [contenteditable]')) {
+        e.preventDefault();
+        toggleTabCloak();
+        return;
+      }
+    }
+    if (tabCloaked) {
+      // While cloaked, ignore OS shortcuts except cloak toggle (already handled)
+      if (e.key === 'Escape') { e.preventDefault(); disableTabCloak(); return; }
+      return;
+    }
     if (e.key === 'Escape') {
       document.getElementById('start-menu').classList.add('hidden');
       document.getElementById('start-btn').classList.remove('active');
@@ -1339,11 +1406,11 @@
       title: 'About OrbitOS', icon: 'ℹ️', width: 460, height: 520,
       content: function () {
         return '<div class="about-body"><div class="about-logo">🚀</div><h2>OrbitOS</h2>' +
-          '<p class="version">Version 1.5.1 — Studio Pack</p>' +
+          '<p class="version">Version 1.5.2 — Studio Pack</p>' +
           '<p>A complete desktop OS in pure HTML, CSS & JavaScript for GitHub Pages.</p>' +
           '<div class="about-features"><span>🪟 Windows</span><span>🎮 Games</span><span>🎵 Music</span><span>🤖 Assistant</span><span>🔦 Nightshift</span><span>🎨 Paint</span></div>' +
           '<div class="changelog"><h4>Changelog</h4><ul>' +
-          '<li><strong>1.5.1</strong> — Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
+          '<li><strong>1.5.2</strong> — Tab cloak (Google disguise); Nightshift (Pixel Palace), Orbit Assistant, Clock, Gallery; improved music</li>' +
           '<li><strong>1.5.0</strong> — Generative music studio, mobile polish</li>' +
           '<li><strong>1.4.x</strong> — Video, To-Do, Markdown, Solitaire, clipboard</li>' +
           '<li><strong>1.3–1.0</strong> — Themes, games, window manager, core apps</li></ul></div>' +
@@ -1393,9 +1460,10 @@
           { keys: ['clock', 'time', 'alarm'], text: 'Desktop clock is top-right. Open Clock app for larger time + simple alarm notes. Taskbar clock opens the calendar.' },
           { keys: ['gallery', 'photo', 'image', 'picture'], text: 'Open Gallery to browse sample wallpapers and pastel placeholders.' },
           { keys: ['shutdown', 'power', 'reboot'], text: 'Start → Shut Down. Reboot button reloads the page.' },
+          { keys: ['cloak', 'tab cloak', 'google', 'disguise', 'panic', 'hide tab'], text: 'Press the ` key (above Tab) to disguise this tab as Google. Press ` again or Esc to return. Right-click desktop → Tab cloak.' },
           { keys: ['github', 'deploy', 'pages'], text: 'Upload index.html, styles.css, script.js to a repo root and enable GitHub Pages.' }
         ];
-        var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Keyboard shortcuts', 'Open music', 'What games are there?'];
+        var starters = ['How do I change wallpaper?', 'Nightshift tips', 'Tab cloak', 'Keyboard shortcuts', 'Open music'];
         hints.innerHTML = starters.map(function (s) {
           return '<button type="button" class="assist-chip">' + s + '</button>';
         }).join('');
@@ -2407,7 +2475,8 @@
     { id: 'lock', icon: '🔒', label: 'Lock screen', type: 'action', fn: function () { lockScreen(); } },
     { id: 'fullscreen', icon: '⛶', label: 'Toggle fullscreen', type: 'action', fn: function () { toggleFullscreen(); } },
     { id: 'screensaver', icon: '✨', label: 'Start screensaver', type: 'action', fn: function () { startScreensaver(); } },
-    { id: 'mute', icon: '🔇', label: 'Toggle mute', type: 'action', fn: function () { toggleMute(); } }
+    { id: 'mute', icon: '🔇', label: 'Toggle mute', type: 'action', fn: function () { toggleMute(); } },
+    { id: 'cloak', icon: '🕵️', label: 'Tab cloak (Google)', type: 'action', fn: function () { toggleTabCloak(); } }
   ];
 
   function openCommandPalette() {
@@ -2763,6 +2832,7 @@
         else if (a === 'wallpaper') { wallpaperIndex = (wallpaperIndex + 1) % 5; applyWallpaper(); showToast('Wallpaper changed'); }
         else if (a === 'tips') document.getElementById('tips-overlay').classList.remove('hidden');
         else if (a === 'about') openApp('about');
+        else if (a === 'cloak') toggleTabCloak();
         ctx.classList.add('hidden'); sfx('click');
       });
     });
@@ -2944,6 +3014,27 @@
       if (panel && !panel.contains(e.target) && e.target.id !== 'clip-icon') panel.classList.add('hidden');
     });
   }
+
+
+    // Tab cloak search buttons → real Google in new tab (looks legit)
+    var cloak = document.getElementById('tab-cloak');
+    if (cloak) {
+      cloak.querySelectorAll('.g-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var q = (document.getElementById('g-q') || {}).value || '';
+          var url = q.trim() ? ('https://www.google.com/search?q=' + encodeURIComponent(q.trim())) : 'https://www.google.com/';
+          window.open(url, '_blank', 'noopener');
+        });
+      });
+      var gq = document.getElementById('g-q');
+      if (gq) gq.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var q = gq.value.trim();
+          window.open(q ? 'https://www.google.com/search?q=' + encodeURIComponent(q) : 'https://www.google.com/', '_blank', 'noopener');
+        }
+      });
+    }
 
   boot();
   setupUI();

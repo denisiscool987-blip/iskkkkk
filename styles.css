@@ -1251,3 +1251,54 @@ body {
   .ns-controls button { padding: 10px 8px; font-size: 0.75rem; }
   #ns-canvas { width: 100%; }
 }
+
+/* ===== Tab cloak (fake Google) ===== */
+#tab-cloak {
+  position: fixed; inset: 0; z-index: 20000;
+  background: #202124; color: #e8eaed;
+  font-family: arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+#tab-cloak.hidden { display: none !important; }
+#tab-cloak.light { background: #fff; color: #202124; }
+.g-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.g-logo { font-size: clamp(3.5rem, 12vw, 5.5rem); font-weight: 500; letter-spacing: -2px; margin-bottom: 28px; user-select: none; }
+.g-b { color: #4285f4; } .g-r { color: #ea4335; } .g-y { color: #fbbc05; } .g-g { color: #34a853; }
+.g-search { width: min(560px, 92vw); }
+.g-search-box {
+  display: flex; align-items: center; gap: 12px;
+  background: #303134; border: 1px solid #5f6368; border-radius: 24px;
+  padding: 12px 18px; margin-bottom: 18px;
+}
+#tab-cloak.light .g-search-box { background: #fff; border-color: #dfe1e5; box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
+.g-search-box:focus-within { border-color: #8ab4f8; }
+#g-q {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 16px; color: inherit;
+}
+.g-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.g-btn {
+  padding: 10px 16px; border-radius: 4px; border: 1px solid #3c4043;
+  background: #303134; color: #e8eaed; font-size: 14px; cursor: pointer;
+}
+#tab-cloak.light .g-btn { background: #f8f9fa; color: #3c4043; border-color: #f8f9fa; }
+.g-btn:hover { border-color: #5f6368; }
+.g-hint { margin-top: 28px; font-size: 12px; color: #9aa0a6; }
+.g-hint kbd {
+  background: #303134; border: 1px solid #5f6368; border-radius: 4px;
+  padding: 2px 6px; font-family: monospace;
+}
+.g-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+  padding: 12px 24px; background: #171717; font-size: 13px; color: #9aa0a6;
+}
+#tab-cloak.light .g-footer { background: #f2f2f2; color: #70757a; }
+.g-footer-row { display: flex; gap: 18px; flex-wrap: wrap; }
+.g-footer span { cursor: default; }
+.g-mic { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .g-footer { flex-direction: column; align-items: center; text-align: center; }
+}

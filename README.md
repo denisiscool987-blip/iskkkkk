@@ -1,6 +1,6 @@
 # OrbitOS
 
-Browser desktop OS for GitHub Pages. **v1.5.1 Studio Pack.**  
+Browser desktop OS for GitHub Pages. **v1.5.2 Studio Pack.**  
 No install · no backend · localStorage only.
 
 ## Apps
@@ -15,6 +15,9 @@ Check cameras · close doors · use hall lights · manage power · survive 12 AM
 
 ## Orbit Assistant
 Local keyword helper — ask about wallpaper, shortcuts, Nightshift, music, deploy, etc.
+
+## Tab cloak
+Press **`** (backtick, key above Tab) to disguise the tab as **Google** (title, favicon, full fake homepage). Press **`** again or **Esc** to return. Also: right-click desktop → Tab cloak, or Ctrl+K → Tab cloak.
 
 ## System
 Ctrl+K palette · Ctrl+R Run · Ctrl+L lock · Ctrl+Shift+V clipboard  
